@@ -16,3 +16,4 @@
 - All catalog TV-BFF calls (home rails included) must run through server functions (`src/lib/catalog.functions.ts`); the TV gateway blocks browser origins with CORS, so client components must never import `fetchSection`/`searchCatalog` or other `moviebox.ts` functions directly.
 - Activity records capture only signed-in users' actionable clicks, internal destinations, and page paths; never store typed field values or other sensitive input.
 - Keep every existing sitemap in the sitemap index and robots file when adding a new content-group sitemap, because external indexes may already rely on those URLs.
+- Extra providers (4KHDHub, Dramachi, Addons/Cinemeta, CircleFTP, DhakaFlix) live in `src/lib/providers/*.server.ts` behind `src/lib/providers.functions.ts`; source links resolve lazily via tokens and play/download through `/api/public/stream`. Why: provider sites block browsers and their mirror links expire quickly.
