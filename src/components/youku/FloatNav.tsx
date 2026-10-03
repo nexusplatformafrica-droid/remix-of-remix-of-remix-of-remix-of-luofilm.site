@@ -81,7 +81,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
           <button
             type="button"
             onClick={() => setProv((v) => !v)}
-            className={`${pill(pathname.startsWith("/p/"))} flex items-center gap-1`}
+            className={`${pill(pathname.startsWith("/p/"))} !flex items-center gap-1`}
           >
             <span className="hidden sm:inline">Providers</span>
             <span className="sm:hidden">+More</span>

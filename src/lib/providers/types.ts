@@ -46,11 +46,14 @@ const QUALITY_ORDER = ["8K", "4K", "1440p", "1080p", "720p", "540p", "480p", "36
 
 export function detectQuality(text: string): string {
   const t = text.toLowerCase();
-  if (/4320p|\b8k\b/.test(t)) return "8K";
-  if (/2160p|\b4k\b|\buhd\b/.test(t)) return "4K";
-  if (/1440p|\b2k\b/.test(t)) return "1440p";
+  if (/4320p/.test(t)) return "8K";
+  if (/2160p/.test(t)) return "4K";
+  if (/1440p/.test(t)) return "1440p";
   const m = t.match(/(1080|720|540|480|360)p/);
-  return m ? `${m[1]}p` : "SD";
+  if (m) return `${m[1]}p`;
+  if (/\b8k\b/.test(t)) return "8K";
+  if (/\b4k\b|\buhd\b/.test(t)) return "4K";
+  return "SD";
 }
 
 export const qualityRank = (q: string) => {
