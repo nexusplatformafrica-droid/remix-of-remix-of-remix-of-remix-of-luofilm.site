@@ -76,21 +76,10 @@ function HomePage() {
   const { data, refetch } = useQuery(homeQuery);
   const wideTrending = useQuery(trendingQuery);
   const slides = data?.hero ?? [];
-  const [index, setIndex] = useState(0);
-  // Hero cards pass together as a grid: 2 per page on mobile, 4 on desktop.
-  const [isWide, setIsWide] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const update = () => setIsWide(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  const perPage = isWide ? 4 : 2;
-  const pageCount = Math.max(1, Math.ceil(slides.length / perPage));
-  const heroPages = Array.from({ length: pageCount }, (_, p) =>
-    slides.slice(p * perPage, (p + 1) * perPage),
-  );
+  // The hero never stops: the track repeats the cards and drifts left slowly
+  // forever instead of jumping between fixed pages.
+  const copies = Math.max(2, Math.ceil(6 / Math.max(slides.length, 1)));
+  const marqueeDur = Math.max(28, slides.length * 8);
 
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
@@ -101,16 +90,6 @@ function HomePage() {
     const t = setTimeout(() => void refetch(), 300);
     return () => clearTimeout(t);
   }, [degraded, refetch]);
-
-  useEffect(() => {
-    if (pageCount < 2) return;
-    setIndex((i) => Math.min(i, pageCount - 1));
-    const t = setInterval(() => setIndex((i) => (i + 1) % pageCount), 6000);
-    return () => clearInterval(t);
-  }, [pageCount]);
-
-
-  const slide = slides[Math.min(index, Math.max(slides.length - 1, 0))];
   // Row titles arrive with emoji from upstream; strip them for a clean typographic look.
   const cleanTitle = (t: string) =>
     t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2B00}-\u{2BFF}]/gu, "").trim();
