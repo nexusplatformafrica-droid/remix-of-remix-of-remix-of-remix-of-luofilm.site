@@ -126,6 +126,13 @@ export const Route = createFileRoute("/api/public/movie")({
         }
         if (!upstream || (!upstream.ok && upstream.status !== 206)) {
           await upstream?.body?.cancel();
+          if (probe) {
+            // The media host refused our server; the browser can read the size itself.
+            return Response.json(
+              { size: source.bytes || null, type: "video/mp4", direct: source.url },
+              { headers: { "cache-control": "no-store", ...corsHeaders } },
+            );
+          }
           return (
             directFallback(source.url) ??
             errorResponse("Full movie file could not be opened", 502)

@@ -26,6 +26,8 @@ import {
   type PayPlan,
   startCardCheckout,
   syncCardPayment,
+  startPayPal,
+  syncPayPalPayment,
 } from "@/lib/payments";
 import {
   convertPrice,
@@ -40,7 +42,7 @@ import {
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { detectVisitorGeo } from "@/lib/geo.functions";
-import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo } from "@/components/auth/PaymentLogos";
+import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
 
 const TAGS: Record<string, string> = { daily: "Try it", "s-monthly": "Popular" };
 
@@ -53,13 +55,14 @@ const PERKS = [
 
 type Phase = "idle" | "phone" | "card" | "waiting" | "done" | "failed";
 
-type ModalMethod = "mobile_money" | "card" | "google_pay" | "apple_pay";
+type ModalMethod = "mobile_money" | "card" | "google_pay" | "apple_pay" | "paypal";
 
 const METHODS: Array<{ id: ModalMethod; label: string }> = [
   { id: "mobile_money", label: "Mobile Money" },
   { id: "card", label: "Card" },
   { id: "google_pay", label: "Google Pay" },
   { id: "apple_pay", label: "Apple Pay" },
+  { id: "paypal", label: "PayPal" },
 ];
 
 
@@ -178,7 +181,9 @@ export function SubscribeModal({
         const result =
           method === "mobile_money"
             ? await syncTransaction(String(tx.id)).catch(() => null)
-            : await syncCardPayment(String(tx.id)).catch(() => null);
+            : method === "paypal" && liveTx.current
+              ? await syncPayPalPayment(String(tx.id)).catch(() => null)
+              : await syncCardPayment(String(tx.id)).catch(() => null);
         if (!result) return;
         if (result.status === "completed") {
           setPhase("done");
@@ -237,6 +242,8 @@ export function SubscribeModal({
     if (!user) return;
     setPhase("waiting");
     setStatus("Preparing the secure payment page…");
+    // Open the tab right away so pop-up blockers allow it.
+    const win = window.open("about:blank", "_blank");
     try {
       const tx = await createPaymentIntent({
         userId: user.id,
@@ -246,12 +253,15 @@ export function SubscribeModal({
         amount: localPrice,
       });
       liveTx.current = tx;
-      const url = await startCardCheckout(tx);
-      window.open(url, "_blank", "noopener,noreferrer");
+      const url = method === "paypal" ? await startPayPal(tx) : await startCardCheckout(tx);
+      if (win) win.location.href = url;
+      else window.open(url, "_blank");
+      setWhopUrl(url);
       setPhase("card");
       setStatus("Finish the payment in the new tab — this page updates automatically once it's confirmed.");
     } catch (err) {
       setPhase("failed");
+      win?.close();
       setStatus(err instanceof Error ? err.message : "Could not start the card payment.");
       setFailOpen(true);
     }
@@ -358,7 +368,7 @@ export function SubscribeModal({
                   · {country.name} ({country.currency})
                 </span>
               </p>
-              <div className={`mt-1.5 grid gap-1.5 sm:gap-2 ${methods.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
+              <div className={`mt-1.5 grid gap-1.5 sm:gap-2 ${methods.length >= 4 ? "grid-cols-3 sm:grid-cols-5" : "grid-cols-3"}`}>
                 {methods.map((m) => {
                   const on = method === m.id;
                   return (
@@ -383,6 +393,8 @@ export function SubscribeModal({
                         <CardLogo />
                       ) : m.id === "google_pay" ? (
                         <GooglePayLogo />
+                      ) : m.id === "paypal" ? (
+                        <PayPalLogo />
                       ) : (
                         <ApplePayLogo />
                       )}

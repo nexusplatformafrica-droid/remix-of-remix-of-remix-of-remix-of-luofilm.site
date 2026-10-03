@@ -114,7 +114,10 @@ async function fetchSubtitles(captions: CatalogDownloadInput["captions"]) {
   const files: DownloadRecord["subtitleFiles"] = [];
   for (const caption of captions) {
     try {
-      const response = await fetch(caption.url, { credentials: "include" });
+      const url = caption.url.startsWith("https://")
+        ? `/api/public/subtitle?url=${encodeURIComponent(caption.url)}`
+        : caption.url;
+      const response = await fetch(url, { credentials: "same-origin" });
       if (response.ok) files.push({ label: caption.label, text: await response.text() });
     } catch {
       // A subtitle failure must not invalidate a verified movie file.
@@ -200,10 +203,15 @@ export async function downloadCatalogFile(
     status: "preparing",
   });
   const total = await withRetry(async () => {
-    const probe = await fetch(input.probeUrl, { credentials: "include", signal: signal ?? null });
+    const probe = await fetch(input.probeUrl, { credentials: "same-origin", signal: signal ?? null });
     if (!probe.ok) throw new Error("The full movie size could not be verified.");
-    const probeData = (await probe.json()) as { size?: number };
-    const size = Number(probeData.size) || 0;
+    const probeData = (await probe.json()) as { size?: number; direct?: string };
+    let size = Number(probeData.size) || 0;
+    if (size <= 0 && probeData.direct) {
+      // Our server could not reach the file host; ask the host for the size directly.
+      const head = await fetch(probeData.direct, { method: "HEAD", signal: signal ?? null }).catch(() => null);
+      size = Number(head?.headers.get("content-length")) || 0;
+    }
     if (size <= 0) throw new Error("The full movie size is unavailable.");
     return size;
   }, signal, onRetrying);
@@ -272,7 +280,7 @@ export async function downloadCatalogFile(
         let response: Response;
         try {
           response = await fetch(input.url, {
-            credentials: "include",
+            credentials: "same-origin",
             signal: signal ?? null,
             headers: { Range: `bytes=${start}-${end}`, "Accept-Encoding": "identity" },
           });
@@ -288,7 +296,9 @@ export async function downloadCatalogFile(
           throw new Error(`The movie server did not accept resume range ${start}-${end}.`);
         }
         const range = parseContentRange(response.headers.get("content-range"));
-        if (!range || range.start !== start || range.end !== end || range.total !== total) {
+        // When the server hands the range to the media CDN directly, the CDN
+        // hides Content-Range from the page; the exact byte count is checked below.
+        if (range ? range.start !== start || range.end !== end || range.total !== total : !response.redirected) {
           throw new Error("The movie server returned an invalid byte range.");
         }
         const parts: Uint8Array[] = [];

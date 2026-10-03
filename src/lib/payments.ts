@@ -270,6 +270,11 @@ export async function expireTx(txId: string) {
 
 /** Card / Apple Pay / Google Pay: creates a Whop one-click checkout link for this transaction. */
 export async function startCardCheckout(tx: Row) {
+  return (await startCardSession(tx)).url;
+}
+
+/** Same as startCardCheckout, but also returns the Whop session id for the embedded form. */
+export async function startCardSession(tx: Row) {
   const res = await startWhopCheckout({
     data: {
       txId: String(tx.id),
@@ -284,7 +289,7 @@ export async function startCardCheckout(tx: Row) {
     .from("luo_transactions")
     .update({ internal_reference: res.sessionId, used_at: nowIso() })
     .eq("id", String(tx.id));
-  return res.purchaseUrl ?? `https://whop.com/checkout/${res.sessionId}`;
+  return { sessionId: res.sessionId, url: res.purchaseUrl ?? `https://whop.com/checkout/${res.sessionId}` };
 }
 
 /** Polled while the card form is open; activates membership once Whop confirms. */

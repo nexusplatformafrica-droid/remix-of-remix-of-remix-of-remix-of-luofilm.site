@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
-import { getTx, startMobileMoney, syncTransaction, startCardCheckout, syncCardPayment } from "@/lib/payments";
+import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, startPayPal, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
 import type { Row } from "@/lib/fdb";
 import { lazy, Suspense } from "react";
@@ -11,11 +11,11 @@ export const Route = createFileRoute("/pay/$id")({
   head: () => ({
     meta: [
       { title: "Complete your payment — LUOFILM.SITE" },
-      { name: "description", content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay or Apple Pay." },
+      { name: "description", content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal." },
       { property: "og:title", content: "Complete your payment — LUOFILM.SITE" },
       {
         property: "og:description",
-        content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay or Apple Pay.",
+        content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -25,13 +25,14 @@ export const Route = createFileRoute("/pay/$id")({
   component: PayPage,
 });
 
-type Method = "mobile_money" | "card" | "google_pay" | "apple_pay";
+type Method = "mobile_money" | "card" | "google_pay" | "apple_pay" | "paypal";
 
 const METHODS: { id: Method; label: string; icon: typeof Smartphone }[] = [
   { id: "mobile_money", label: "Mobile Money", icon: Smartphone },
   { id: "card", label: "Card", icon: CreditCard },
   { id: "google_pay", label: "Google Pay", icon: Wallet },
   { id: "apple_pay", label: "Apple Pay", icon: Wallet },
+  { id: "paypal", label: "PayPal", icon: Wallet },
 ];
 
 function PayPage() {
@@ -44,12 +45,61 @@ function PayPage() {
   const [whopUrl, setWhopUrl] = useState<string | null>(null);
   const started = useRef(false);
 
+  const [paypalBack, setPaypalBack] = useState(false);
+
   useEffect(() => {
     void getTx(id).then((row) => {
       setTx(row);
       if (!row) setStatus("This payment link is not valid.");
     });
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("paypal") === "return") {
+      setMethod("paypal");
+      setPaypalBack(true);
+      setPhase("waiting");
+      setStatus("Confirming your PayPal payment…");
+    } else if (q.get("paypal") === "cancel") {
+      setMethod("paypal");
+      setStatus("PayPal payment was cancelled. No money was taken.");
+    } else if (q.get("whop") === "return") {
+      setMethod("card");
+      setWhopUrl("return");
+      setPhase("waiting");
+      setStatus("Confirming your card payment…");
+    }
   }, [id]);
+
+  // PayPal: after the buyer approves, capture and activate.
+  useEffect(() => {
+    if (!paypalBack || phase === "done") return;
+    const run = () =>
+      void syncPayPalPayment(id).then((r) => {
+        if (r.status === "completed") {
+          setPhase("done");
+          setStatus("Payment confirmed. Your membership is active on all your devices.");
+        } else if (r.status === "failed") {
+          setPhase("failed");
+          setStatus(r.message);
+        } else setStatus(r.message);
+      });
+    run();
+    const timer = window.setInterval(run, 3000);
+    return () => window.clearInterval(timer);
+  }, [paypalBack, phase, id]);
+
+  const openPayPal = async () => {
+    if (!tx || started.current) return;
+    started.current = true;
+    setPhase("waiting");
+    setStatus("Opening PayPal…");
+    try {
+      window.location.href = await startPayPal(tx);
+    } catch (err) {
+      started.current = false;
+      setPhase("failed");
+      setStatus(err instanceof Error ? err.message : "Could not start PayPal.");
+    }
+  };
 
   // Mobile money polling.
   useEffect(() => {
@@ -110,7 +160,7 @@ function PayPage() {
     setPhase("waiting");
     setStatus("Loading the secure payment form…");
     try {
-      setWhopUrl(await startCardCheckout(tx));
+      setWhopUrl((await startCardSession(tx)).sessionId);
       setStatus("Complete the payment in the secure form below.");
     } catch (err) {
       started.current = false;
@@ -137,7 +187,7 @@ function PayPage() {
               </p>
             </div>
 
-            {phase !== "done" && !whopUrl && (
+            {phase !== "done" && !whopUrl && !paypalBack && (
               <div className="mt-4">
                 <p className="text-[11px] font-semibold opacity-70">Payment method</p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -203,6 +253,18 @@ function PayPage() {
               </button>
             )}
 
+            {phase !== "done" && method === "paypal" && !paypalBack && (
+              <button
+                type="button"
+                onClick={() => void openPayPal()}
+                disabled={phase === "waiting"}
+                className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[15px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60"
+              >
+                <Wallet className="size-4" />
+                {phase === "waiting" ? "Opening PayPal…" : "Pay with PayPal"}
+              </button>
+            )}
+
             {phase !== "done" && isWallet && !whopUrl && (
               <button
                 type="button"
@@ -221,7 +283,7 @@ function PayPage() {
               </button>
             )}
 
-            {whopUrl && phase !== "done" && (
+            {whopUrl && whopUrl !== "return" && phase !== "done" && (
 <div className="mt-4 min-h-[420px] rounded-2xl bg-white ring-1 ring-black/10"><Suspense fallback={null}><WhopEmbed sessionId={whopUrl} /></Suspense></div>
             )}
 

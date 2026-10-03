@@ -131,17 +131,35 @@ export function queueSubtitleDownload(url: string, filename: string) {
       let attempt = 0;
       for (;;) {
         try {
-          const response = await fetch(url, { credentials: "include" });
+          const response = await fetch(url, { credentials: "same-origin" });
           if (!response.ok) throw new Error("Subtitle not available");
           return await response.blob();
         } catch (e) {
-          if (++attempt > 5) throw e;
+          if (++attempt > 2) {
+            // Our server could not fetch it: hand the original subtitle link to the browser.
+            const raw = new URL(url, window.location.origin).searchParams.get("url");
+            if (raw?.startsWith("https://")) {
+              const a = document.createElement("a");
+              a.href = raw;
+              a.download = filename.replace(/\.vtt$/, ".srt");
+              a.rel = "noopener";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              return null;
+            }
+            throw e;
+          }
           upsert({ id, status: "retrying" });
           await new Promise((r) => setTimeout(r, 2000 * attempt));
         }
       }
     })()
       .then((blob) => {
+        if (!blob) {
+          upsert({ id, percent: 100, status: "done" });
+          return;
+        }
         const objectUrl = URL.createObjectURL(new Blob([blob], { type: "text/vtt" }));
         const a = document.createElement("a");
         a.href = objectUrl;
