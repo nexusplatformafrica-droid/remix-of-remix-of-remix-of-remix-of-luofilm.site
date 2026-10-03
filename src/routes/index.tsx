@@ -202,15 +202,24 @@ function HomePage() {
                           className="w-[calc(var(--card-w)+8px)] shrink-0 px-1"
                         >
                           <div className="hero-ring rounded-2xl p-[2px]">
-                            <Link
-                              to="/watch/$id"
-                              params={{ id: s.id }}
+                            <HeroLink
+                              card={s}
                               tabIndex={c === 0 ? 0 : -1}
                               className="group relative block aspect-[16/9] overflow-hidden rounded-[calc(1rem-2px)] bg-card"
                             >
-                              {s.backdrop ? (
+                              {s.vj && (
+                                <span className="absolute left-2 top-2 z-10 rounded-md bg-primary px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-primary-foreground shadow sm:text-xs">
+                                  VJ {s.vj}
+                                </span>
+                              )}
+                              {s.promo && (
+                                <span className="absolute left-2 top-2 z-10 rounded-md bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase text-foreground backdrop-blur sm:text-xs">
+                                  Promo
+                                </span>
+                              )}
+                              {s.image ? (
                                 <img
-                                  src={s.backdrop}
+                                  src={s.image}
                                   alt={s.title}
                                   loading={c === 0 ? "eager" : "lazy"}
                                   fetchPriority={c === 0 && i === 0 ? "high" : "auto"}
