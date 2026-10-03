@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fdb } from "@/lib/fdb";
+import { TeamTab } from "@/components/admin/TeamTab";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { LayoutDashboard, Users, Film, Wallet, Settings, ShieldCheck, MessageCircle, Sparkles } from "lucide-react";
+import { UserCog, LayoutDashboard, Users, Film, Wallet, Settings, ShieldCheck, MessageCircle, Sparkles } from "lucide-react";
 import { Sidebar } from "@/components/youku/Sidebar";
 import { TopBar } from "@/components/youku/TopBar";
 import { MobileNav } from "@/components/youku/MobileNav";
@@ -42,11 +45,28 @@ const TABS: { k: AdminTab; t: string; i: typeof Users }[] = [
   { k: "notify", t: "Notify", i: MessageCircle },
   { k: "wallet", t: "Wallet", i: Wallet },
   { k: "settings", t: "Settings", i: Settings },
+  { k: "team", t: "Admins", i: UserCog },
 ];
+
+// Tabs a team admin (added by the main admin) may open.
+const STAFF_TABS: AdminTab[] = ["overview", "users", "content", "hero"];
 
 function AdminPage() {
   const { isAdmin, checking, user } = useIsAdmin();
   const [tab, setTab] = useState<AdminTab>("overview");
+  const staffQ = useQuery({
+    queryKey: ["my-staff-role", user?.id],
+    enabled: !!user && !isAdmin && !checking,
+    queryFn: async () => {
+      const { data } = await fdb.from("user_roles").select("*").eq("user_id", user!.id).maybeSingle();
+      return data?.role === "staff";
+    },
+  });
+  const isStaff = !isAdmin && !!staffQ.data;
+  const canOpen = isAdmin || isStaff;
+  const tabs = isAdmin ? TABS : TABS.filter((t) => STAFF_TABS.includes(t.k));
+  const current: AdminTab = tabs.some((t) => t.k === tab) ? tab : "overview";
+  const go = (t: AdminTab) => setTab(tabs.some((x) => x.k === t) ? t : "overview");
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,13 +88,13 @@ function AdminPage() {
               </span>
             </header>
 
-            {checking ? (
+            {checking || (!isAdmin && !!user && staffQ.isLoading) ? (
               <p className="py-16 text-center text-[13px] opacity-60">Checking access…</p>
             ) : !user ? (
               <p className="py-16 text-center text-[13px] opacity-70">
                 Sign in with the Login button above to open the dashboard.
               </p>
-            ) : !isAdmin ? (
+            ) : !canOpen ? (
               <div className="py-16 text-center">
                 <p className="text-[13px] opacity-70">
                   This account is not an admin yet. If no admin exists, claim it now.
@@ -102,13 +122,13 @@ function AdminPage() {
             ) : (
               <>
                 <nav className="mt-5 flex flex-wrap gap-1.5 rounded-full bg-white/60 p-1.5 ring-1 ring-black/5">
-                  {TABS.map((t) => (
+                  {tabs.map((t) => (
                     <button
                       key={t.k}
                       type="button"
-                      onClick={() => setTab(t.k)}
+                      onClick={() => go(t.k)}
                       className={`flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold transition ${
-                        tab === t.k
+                        current === t.k
                           ? "bg-[linear-gradient(100deg,oklch(0.96_0.05_95),oklch(0.89_0.11_78))] shadow-[0_10px_24px_-16px_oklch(0.8_0.12_75)]"
                           : "opacity-60 hover:opacity-90"
                       }`}
@@ -119,13 +139,14 @@ function AdminPage() {
                 </nav>
 
                 <div className="mt-5">
-                  {tab === "overview" && <Overview go={setTab} />}
-                  {tab === "users" && <UsersTab />}
-                  {tab === "content" && <ContentTab userId={user.id} />}
-                  {tab === "hero" && <HeroTab />}
-                  {tab === "notify" && <NotifyTab />}
-                  {tab === "wallet" && <WalletTab />}
-                  {tab === "settings" && <SettingsTab />}
+                  {current === "overview" && <Overview go={go} limited={isStaff} />}
+                  {current === "users" && <UsersTab />}
+                  {current === "content" && <ContentTab userId={user.id} restricted={isStaff} />}
+                  {current === "hero" && <HeroTab />}
+                  {isAdmin && current === "notify" && <NotifyTab />}
+                  {isAdmin && current === "wallet" && <WalletTab />}
+                  {isAdmin && current === "settings" && <SettingsTab />}
+                  {isAdmin && current === "team" && <TeamTab />}
                 </div>
               </>
             )}
