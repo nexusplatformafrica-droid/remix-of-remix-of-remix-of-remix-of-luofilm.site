@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
+import { Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
 import { PROVIDERS } from "@/lib/providers/types";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Icon3D } from "@/components/Icon3D";
@@ -31,7 +31,6 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
   const { openSubscribe } = useSubscription();
   const [authOpen, setAuthOpen] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [prov, setProv] = useState(false);
 
   const pill = (active: boolean) =>
     `grid h-8 place-items-center rounded-full px-3.5 text-[12px] font-black uppercase tracking-wide transition ${
@@ -77,36 +76,17 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
         >
           Luganda
         </Link>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setProv((v) => !v)}
-            className={`${pill(pathname.startsWith("/p/"))} !flex items-center gap-1`}
+        {PROVIDERS.map((p) => (
+          <Link
+            key={p.id}
+            to="/p/$provider"
+            params={{ provider: p.id }}
+            title={p.blurb}
+            className={`${pill(pathname === `/p/${p.id}` || pathname.startsWith(`/p/${p.id}/`))}`}
           >
-            <span className="hidden sm:inline">Providers</span>
-            <span className="sm:hidden">+More</span>
-            <ChevronDown className="size-3.5" />
-          </button>
-          {prov && (
-            <div
-              className="absolute left-0 top-10 z-50 w-60 overflow-hidden rounded-xl bg-card/95 p-1 shadow-2xl ring-1 ring-border backdrop-blur-xl"
-              onMouseLeave={() => setProv(false)}
-            >
-              {PROVIDERS.map((p) => (
-                <Link
-                  key={p.id}
-                  to="/p/$provider"
-                  params={{ provider: p.id }}
-                  onClick={() => setProv(false)}
-                  className="block rounded-lg px-3 py-2 hover:bg-foreground/10"
-                >
-                  <span className="block text-[13px] font-bold text-foreground">{p.name}</span>
-                  <span className="block text-[11px] text-muted-foreground">{p.blurb}</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+            {p.name}
+          </Link>
+        ))}
         {onSearch && (
           <button
             type="button"
