@@ -144,7 +144,7 @@ function HomePage() {
           <TopBar />
 
           {!data && (
-            <div className="px-3 pt-4 sm:px-4 lg:px-8">
+            <div className="px-3 pt-[68px] sm:px-4 lg:px-8 lg:pt-20">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="aspect-[16/9] animate-pulse rounded-xl bg-muted/40" />
@@ -156,7 +156,7 @@ function HomePage() {
           {!!data && !slides.length && <div className="h-16" />}
 
           {!!slides.length && (
-            <section className="relative px-3 pt-4 [--card-w:calc((100vw-40px)/2)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:[--card-w:calc((100vw-260px)/3)] lg:px-8">
+            <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-40px)/2)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-260px)/3)] lg:px-8">
               {/* The hero never stops: cards in animated gradient holders pass
                   slowly across the page forever — 2 across on mobile, 3 bigger
                   ones on desktop. Hovering pauses the pass. */}
@@ -225,7 +225,7 @@ function HomePage() {
             </section>
           )}
 
-          <div className="relative z-20 -mt-4 mb-3 pl-3 sm:pl-4 lg:pl-8">
+          <div className="relative z-20 mt-4 mb-3 pl-3 sm:pl-4 lg:pl-8">
             <VjRail />
           </div>
 
