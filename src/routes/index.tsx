@@ -75,7 +75,31 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const { data, refetch } = useQuery(homeQuery);
   const wideTrending = useQuery(trendingQuery);
-  const slides = data?.hero ?? [];
+  const autoHero = data?.hero ?? [];
+  // Admin-curated hero (API picks, uploaded VJ titles, promo banners) wins
+  // over the automatic hero whenever the admin has saved any slides.
+  const curated = useQuery({ queryKey: ["hero_slides"], queryFn: loadHeroSlides, staleTime: 60_000 });
+  const slides: HeroCard[] = curated.data?.length
+    ? curated.data.map((h) => ({
+        id: h.key,
+        title: h.title,
+        image: h.image,
+        watchId: h.kind === "api" ? h.refId : undefined,
+        href: heroHref(h),
+        vj: h.kind === "upload" ? h.vj : null,
+        promo: h.kind === "promo",
+        meta: h.subtitle ?? "",
+      }))
+    : autoHero.map((s) => ({
+        id: s.id,
+        title: s.title,
+        image: s.backdrop,
+        watchId: s.id,
+        href: `/watch/${s.id}`,
+        vj: null,
+        promo: false,
+        meta: [s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null].filter(Boolean).join(" · "),
+      }));
   // The hero never stops: the track repeats the cards and drifts left slowly
   // forever instead of jumping between fixed pages.
   const copies = Math.max(2, Math.ceil(6 / Math.max(slides.length, 1)));
@@ -84,7 +108,7 @@ function HomePage() {
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
   const degraded =
-    !!data && ((data as { degraded?: boolean }).degraded === true || slides.length === 0);
+    !!data && ((data as { degraded?: boolean }).degraded === true || autoHero.length === 0);
   useEffect(() => {
     if (!degraded) return;
     const t = setTimeout(() => void refetch(), 300);
