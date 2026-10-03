@@ -33,6 +33,8 @@ import { Route as WatchIdRouteImport } from './routes/watch.$id'
 import { Route as ApiPublicMovieRouteImport } from './routes/api/public/movie'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 import { Route as ApiPublicSubtitleRouteImport } from './routes/api/public/subtitle'
+import { Route as PProviderIndexRouteImport } from './routes/p.$provider.index'
+import { Route as PProviderIdRouteImport } from './routes/p.$provider.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -155,6 +157,16 @@ const ApiPublicSubtitleRoute = ApiPublicSubtitleRouteImport.update({
   path: '/api/public/subtitle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PProviderIndexRoute = PProviderIndexRouteImport.update({
+  id: '/p/$provider/',
+  path: '/p/$provider/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PProviderIdRoute = PProviderIdRouteImport.update({
+  id: '/p/$provider/$id',
+  path: '/p/$provider/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -181,6 +193,8 @@ export interface FileRoutesByFullPath {
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
+  '/p/$provider/$id': typeof PProviderIdRoute
+  '/p/$provider/': typeof PProviderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,6 +221,8 @@ export interface FileRoutesByTo {
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
+  '/p/$provider/$id': typeof PProviderIdRoute
+  '/p/$provider': typeof PProviderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -234,6 +250,8 @@ export interface FileRoutesById {
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
+  '/p/$provider/$id': typeof PProviderIdRoute
+  '/p/$provider/': typeof PProviderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -262,6 +280,8 @@ export interface FileRouteTypes {
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
+    | '/p/$provider/$id'
+    | '/p/$provider/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -288,6 +308,8 @@ export interface FileRouteTypes {
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
+    | '/p/$provider/$id'
+    | '/p/$provider'
   id:
     | '__root__'
     | '/'
@@ -314,6 +336,8 @@ export interface FileRouteTypes {
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
+    | '/p/$provider/$id'
+    | '/p/$provider/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -341,6 +365,8 @@ export interface RootRouteChildren {
   ApiPublicMovieRoute: typeof ApiPublicMovieRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
   ApiPublicSubtitleRoute: typeof ApiPublicSubtitleRoute
+  PProviderIdRoute: typeof PProviderIdRoute
+  PProviderIndexRoute: typeof PProviderIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -513,6 +539,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSubtitleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$provider/': {
+      id: '/p/$provider/'
+      path: '/p/$provider'
+      fullPath: '/p/$provider/'
+      preLoaderRoute: typeof PProviderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$provider/$id': {
+      id: '/p/$provider/$id'
+      path: '/p/$provider/$id'
+      fullPath: '/p/$provider/$id'
+      preLoaderRoute: typeof PProviderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -541,6 +581,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicMovieRoute: ApiPublicMovieRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
   ApiPublicSubtitleRoute: ApiPublicSubtitleRoute,
+  PProviderIdRoute: PProviderIdRoute,
+  PProviderIndexRoute: PProviderIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
