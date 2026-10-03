@@ -149,50 +149,69 @@ function HomePage() {
         <div className="relative">
           <TopBar />
 
-          {!data && <div className="relative h-[210px] w-full animate-pulse bg-muted/40 sm:h-[360px] lg:h-[540px]" />}
+          {!data && (
+            <div className="px-3 pt-4 sm:px-4 lg:px-8">
+              <div className="aspect-[16/9] w-full animate-pulse rounded-2xl bg-muted/40 sm:aspect-[21/9]" />
+            </div>
+          )}
 
           {!!data && !slide && <div className="h-16" />}
 
           {slide && (
-            <section className="relative h-[210px] w-full overflow-hidden sm:h-[360px] lg:h-[540px]">
-              {slide.backdrop ? (
-                <img
-                  key={slide.backdrop}
-                  src={slide.backdrop}
-                  alt={slide.title}
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  className="size-full animate-in fade-in object-cover object-[center_18%] duration-700 lg:object-[center_12%]"
-                />
-              ) : (
-                <div className="size-full bg-card" />
-              )}
-
-              {/* Bottom fade so the carousel melts behind the Trending rail instead of cutting off. */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-background via-background/75 to-transparent sm:h-40 lg:h-64" />
-
-              <div className="absolute bottom-0 left-0 top-10 z-20 flex max-w-xl flex-col justify-end gap-1.5 px-3 pb-16 sm:top-28 sm:pb-28 lg:top-16 lg:justify-end lg:gap-3 lg:px-8 lg:pb-28">
-                <h1 className="text-base font-black tracking-wide text-foreground drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-lg lg:text-2xl">
-                  {slide.title}
-                </h1>
-                <Link
-                  to="/watch/$id"
-                  params={{ id: slide.id }}
-                  className="mt-1 flex w-[120px] items-center justify-center gap-2 rounded bg-foreground/20 py-2.5 text-sm font-semibold text-foreground backdrop-blur-md transition-colors hover:bg-foreground/30"
+            <section className="relative px-3 pt-4 sm:px-4 lg:px-8">
+              {/* Sliding track: every slide sits in its own big rounded holder. */}
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-700 ease-out"
+                  style={{ transform: `translateX(-${index * 100}%)` }}
                 >
-                  <Play className="size-4 fill-current" />
-                  Play
-                </Link>
-                <p className="max-w-md truncate text-[11px] text-foreground/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
-                  {[slide.year, slide.genre, slide.rating ? `IMDb ${slide.rating}` : null]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
+                  {slides.map((s, i) => (
+                    <div key={s.id} className="w-full shrink-0 px-0.5">
+                      <Link
+                        to="/watch/$id"
+                        params={{ id: s.id }}
+                        className="group relative block aspect-[16/9] w-full overflow-hidden rounded-2xl bg-card shadow-lg ring-1 ring-foreground/10 sm:aspect-[21/9]"
+                        aria-hidden={i !== index}
+                        tabIndex={i === index ? 0 : -1}
+                      >
+                        {s.backdrop ? (
+                          <img
+                            src={s.backdrop}
+                            alt={s.title}
+                            loading={i === 0 ? "eager" : "lazy"}
+                            fetchPriority={i === 0 ? "high" : "auto"}
+                            decoding="async"
+                            className="size-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div className="size-full bg-muted" />
+                        )}
+
+                        {/* Bottom fade inside the card for readable text. */}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+
+                        <div className="absolute bottom-0 left-0 flex max-w-xl flex-col gap-1.5 p-4 sm:p-6 lg:gap-3 lg:p-8">
+                          <h1 className="text-base font-black tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-xl lg:text-3xl">
+                            {s.title}
+                          </h1>
+                          <span className="mt-1 flex w-[120px] items-center justify-center gap-2 rounded bg-white/20 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-colors group-hover:bg-white/30">
+                            <Play className="size-4 fill-current" />
+                            Play
+                          </span>
+                          <p className="max-w-md truncate text-[11px] text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+                            {[s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {slides.length > 1 && (
-                <div className="absolute bottom-3 right-4 z-20 flex gap-2 sm:bottom-20 lg:bottom-32 lg:right-8">
+                <div className="mt-3 flex justify-center gap-2">
                   {slides.map((s, i) => (
                     <button
                       key={s.id}
