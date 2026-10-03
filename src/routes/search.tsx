@@ -99,7 +99,7 @@ function SearchPage() {
           } satisfies CatalogItem,
           to: t.language === "luganda" ? "/luganda/$id" : t.language === "teso" ? "/teso/$id" : "/luo/$id",
           tag: {
-            label: t.language === "luganda" ? "Luganda" : "Luo",
+            label: t.language === "luganda" ? "Luganda" : t.language === "teso" ? "Teso" : "Luo",
             className:
               t.language === "luganda"
                 ? "bg-gradient-to-r from-sky-500 to-blue-600"

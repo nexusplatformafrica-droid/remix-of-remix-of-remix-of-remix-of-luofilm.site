@@ -8,9 +8,9 @@ import { LuoLibrary } from "@/components/luo/LuoLibrary";
 export const Route = createFileRoute("/teso/")({
   head: () => {
     const title =
-      "LUOFILM.SITE Watch and Download Teso Translated Movies by Your Favourite VJ — Movies for VJ Junior, VJ Ice P, VJ Jingo, VJ Mark and All Other Teso VJs";
+      "LUOFILM.SITE Watch and Download Teso Translated Movies by Your Favourite VJ — Movies and Series from All Teso VJs";
     const description =
-      "Watch and download Teso translated movies and series from your favourite VJs — VJ Junior, VJ Ice P, VJ Jingo, VJ Mark and all other Teso VJs. Movies, series, animation, comedy, action and every genre, free in HD.";
+      "Watch and download Teso translated movies and series from your favourite Teso VJs. Movies, series, animation, comedy, action and every genre, free in HD.";
     return {
       meta: [
         { title },

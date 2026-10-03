@@ -29,6 +29,8 @@ import { Route as LugandaIdRouteImport } from './routes/luganda.$id'
 import { Route as LuoIndexRouteImport } from './routes/luo.index'
 import { Route as LuoIdRouteImport } from './routes/luo.$id'
 import { Route as PayIdRouteImport } from './routes/pay.$id'
+import { Route as TesoIndexRouteImport } from './routes/teso.index'
+import { Route as TesoIdRouteImport } from './routes/teso.$id'
 import { Route as WatchIdRouteImport } from './routes/watch.$id'
 import { Route as ApiPublicMovieRouteImport } from './routes/api/public/movie'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
@@ -137,6 +139,16 @@ const PayIdRoute = PayIdRouteImport.update({
   path: '/pay/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TesoIndexRoute = TesoIndexRouteImport.update({
+  id: '/teso/',
+  path: '/teso/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TesoIdRoute = TesoIdRouteImport.update({
+  id: '/teso/$id',
+  path: '/teso/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchIdRoute = WatchIdRouteImport.update({
   id: '/watch/$id',
   path: '/watch/$id',
@@ -187,9 +199,11 @@ export interface FileRoutesByFullPath {
   '/luganda/$id': typeof LugandaIdRoute
   '/luo/$id': typeof LuoIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/teso/$id': typeof TesoIdRoute
   '/watch/$id': typeof WatchIdRoute
   '/luganda/': typeof LugandaIndexRoute
   '/luo/': typeof LuoIndexRoute
+  '/teso/': typeof TesoIndexRoute
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
@@ -215,9 +229,11 @@ export interface FileRoutesByTo {
   '/luganda/$id': typeof LugandaIdRoute
   '/luo/$id': typeof LuoIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/teso/$id': typeof TesoIdRoute
   '/watch/$id': typeof WatchIdRoute
   '/luganda': typeof LugandaIndexRoute
   '/luo': typeof LuoIndexRoute
+  '/teso': typeof TesoIndexRoute
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
@@ -244,9 +260,11 @@ export interface FileRoutesById {
   '/luganda/$id': typeof LugandaIdRoute
   '/luo/$id': typeof LuoIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/teso/$id': typeof TesoIdRoute
   '/watch/$id': typeof WatchIdRoute
   '/luganda/': typeof LugandaIndexRoute
   '/luo/': typeof LuoIndexRoute
+  '/teso/': typeof TesoIndexRoute
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
@@ -274,9 +292,11 @@ export interface FileRouteTypes {
     | '/luganda/$id'
     | '/luo/$id'
     | '/pay/$id'
+    | '/teso/$id'
     | '/watch/$id'
     | '/luganda/'
     | '/luo/'
+    | '/teso/'
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
@@ -302,9 +322,11 @@ export interface FileRouteTypes {
     | '/luganda/$id'
     | '/luo/$id'
     | '/pay/$id'
+    | '/teso/$id'
     | '/watch/$id'
     | '/luganda'
     | '/luo'
+    | '/teso'
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
@@ -330,9 +352,11 @@ export interface FileRouteTypes {
     | '/luganda/$id'
     | '/luo/$id'
     | '/pay/$id'
+    | '/teso/$id'
     | '/watch/$id'
     | '/luganda/'
     | '/luo/'
+    | '/teso/'
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
@@ -359,9 +383,11 @@ export interface RootRouteChildren {
   LugandaIdRoute: typeof LugandaIdRoute
   LuoIdRoute: typeof LuoIdRoute
   PayIdRoute: typeof PayIdRoute
+  TesoIdRoute: typeof TesoIdRoute
   WatchIdRoute: typeof WatchIdRoute
   LugandaIndexRoute: typeof LugandaIndexRoute
   LuoIndexRoute: typeof LuoIndexRoute
+  TesoIndexRoute: typeof TesoIndexRoute
   ApiPublicMovieRoute: typeof ApiPublicMovieRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
   ApiPublicSubtitleRoute: typeof ApiPublicSubtitleRoute
@@ -511,6 +537,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teso/': {
+      id: '/teso/'
+      path: '/teso'
+      fullPath: '/teso/'
+      preLoaderRoute: typeof TesoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teso/$id': {
+      id: '/teso/$id'
+      path: '/teso/$id'
+      fullPath: '/teso/$id'
+      preLoaderRoute: typeof TesoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watch/$id': {
       id: '/watch/$id'
       path: '/watch/$id'
@@ -575,9 +615,11 @@ const rootRouteChildren: RootRouteChildren = {
   LugandaIdRoute: LugandaIdRoute,
   LuoIdRoute: LuoIdRoute,
   PayIdRoute: PayIdRoute,
+  TesoIdRoute: TesoIdRoute,
   WatchIdRoute: WatchIdRoute,
   LugandaIndexRoute: LugandaIndexRoute,
   LuoIndexRoute: LuoIndexRoute,
+  TesoIndexRoute: TesoIndexRoute,
   ApiPublicMovieRoute: ApiPublicMovieRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
   ApiPublicSubtitleRoute: ApiPublicSubtitleRoute,
