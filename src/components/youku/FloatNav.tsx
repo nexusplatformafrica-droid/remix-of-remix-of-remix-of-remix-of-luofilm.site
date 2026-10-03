@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
+import { ChevronDown, ChevronRight, Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
 import { PROVIDERS } from "@/lib/providers/types";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Icon3D } from "@/components/Icon3D";
@@ -32,6 +32,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
   const { openSubscribe } = useSubscription();
   const [authOpen, setAuthOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [providersOpen, setProviders] = useState(false);
   const staffQ = useQuery({
     queryKey: ["my-staff-role", user?.id],
     enabled: !!user && !isAdmin,
