@@ -544,3 +544,42 @@
     background-color: transparent;
   }
 }
+
+/* ---- Hero: slow continuous pass + animated gradient ring around each card ---- */
+@keyframes hero-glow {
+  to {
+    background-position: 300% 0;
+  }
+}
+
+.hero-ring {
+  background-image: linear-gradient(120deg, var(--brand), #00eaff, #ffb300, var(--brand));
+  background-size: 300% 100%;
+  animation: hero-glow 6s linear infinite;
+  box-shadow: 0 10px 32px -16px color-mix(in oklab, var(--brand) 70%, transparent);
+}
+
+@keyframes hero-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% / var(--copies, 2)));
+  }
+}
+
+.hero-marquee-track {
+  animation: hero-marquee 40s linear infinite;
+}
+
+.hero-marquee:hover .hero-marquee-track,
+.hero-marquee:focus-within .hero-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ring,
+  .hero-marquee-track {
+    animation: none;
+  }
+}
