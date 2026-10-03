@@ -8,6 +8,7 @@ import { Icon3D } from "@/components/Icon3D";
 import { useIsAdmin } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { db as supabase } from "@/lib/db";
+import { fdb } from "@/lib/fdb";
 import { listAllEpisodes, listLuoTitles, type LuoLanguage } from "@/lib/luo";
 import markAsset from "@/assets/luofilm-mark.png";
 
@@ -124,7 +125,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
         </button>
 
         {user ? (
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               type="button"
               onClick={() => setMenu((v) => !v)}
@@ -135,7 +136,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
             </button>
             {menu && (
               <div
-                className="absolute right-0 top-10 z-50 w-48 overflow-hidden rounded-xl bg-card/95 p-1 shadow-2xl ring-1 ring-border backdrop-blur-xl"
+                className="fixed right-2 top-14 z-50 w-48 lg:absolute lg:right-0 lg:top-10 overflow-hidden rounded-xl bg-card/95 p-1 shadow-2xl ring-1 ring-border backdrop-blur-xl"
                 onMouseLeave={() => setMenu(false)}
               >
                 <p className="truncate px-3 py-2 text-[11px] text-muted-foreground">{user.email}</p>
