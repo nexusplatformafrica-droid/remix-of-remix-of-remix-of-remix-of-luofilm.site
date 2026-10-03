@@ -31,7 +31,6 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
   const { openSubscribe } = useSubscription();
   const [authOpen, setAuthOpen] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [prov, setProv] = useState(false);
 
   const pill = (active: boolean) =>
     `grid h-8 place-items-center rounded-full px-3.5 text-[12px] font-black uppercase tracking-wide transition ${
