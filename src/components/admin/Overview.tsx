@@ -8,7 +8,7 @@ import { money, seriesByDay, timeAgo } from "@/lib/admin";
 import { walletBalance } from "@/lib/relworx";
 import { Empty, Panel, SoftArea, Stat } from "./ui";
 
-export type AdminTab = "overview" | "users" | "content" | "notify" | "wallet" | "settings";
+export type AdminTab = "overview" | "users" | "content" | "hero" | "notify" | "wallet" | "settings";
 
 async function loadOverview() {
   const [profiles, subs, tx, withdrawals, titles, episodes, activities] = await Promise.all([
