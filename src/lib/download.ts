@@ -123,7 +123,8 @@ export async function registerDownloadWorker() {
     scope: "/",
     updateViaCache: "none",
   });
-  void registration.update().catch(() => {});
+  // Make sure the newest worker version is the one answering downloads.
+  await registration.update().catch(() => {});
   await navigator.serviceWorker.ready;
   return registration.active ?? registration.waiting ?? registration.installing;
 }

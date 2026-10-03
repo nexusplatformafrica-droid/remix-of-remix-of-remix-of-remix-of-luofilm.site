@@ -1,4 +1,4 @@
-/* Download service worker (v3).
+/* Download service worker (v4).
  * Links to /__dl/file?src=<same-origin path>&name=<file>&size=<bytes> are
  * answered here: the worker fetches the file itself (with the signed-in
  * page's cookies) and streams it back with Content-Disposition: attachment,
@@ -20,16 +20,22 @@ async function handle(url) {
   const knownSize = Number(url.searchParams.get("size")) || 0;
   if (!src.startsWith("/api/public/")) return new Response("Bad request", { status: 400 });
 
+  const target = new URL(src, self.location.origin).toString();
   let upstream;
   try {
-    upstream = await fetch(new URL(src, self.location.origin).toString(), {
-      credentials: "include",
-      cache: "no-store",
-    });
+    // same-origin credentials: cookies still reach our own server, and a
+    // redirect to a media CDN that answers "Access-Control-Allow-Origin: *"
+    // is still allowed (credentialed requests would be blocked there).
+    upstream = await fetch(target, { credentials: "same-origin", cache: "no-store" });
   } catch {
-    return new Response("Download failed", { status: 502 });
+    // The file host refused to be streamed through the page: let the browser
+    // download it directly instead (the host sends it as an attachment).
+    return Response.redirect(target, 302);
   }
   if (!upstream.ok || !upstream.body) {
+    if (upstream.status >= 500 || upstream.status === 403 || upstream.status === 429) {
+      return Response.redirect(target, 302);
+    }
     return new Response("Download failed", { status: upstream.status || 502 });
   }
   const size = Number(upstream.headers.get("content-length")) || knownSize;
