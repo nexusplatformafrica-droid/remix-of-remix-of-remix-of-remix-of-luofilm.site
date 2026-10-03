@@ -5,7 +5,7 @@ import { Trash2, UserPlus } from "lucide-react";
 import { fdb, nowIso, uuid } from "@/lib/fdb";
 import { Empty, Panel, goldBtn } from "./ui";
 
-type Row = Record<string, unknown>;
+type Row = { id?: unknown; user_id?: unknown; email?: unknown; phone?: unknown; display_name?: unknown; name?: unknown; role?: unknown; [k: string]: unknown };
 
 async function loadTeam() {
   const [{ data: roles }, { data: profiles }] = await Promise.all([
