@@ -45,8 +45,9 @@ function ProviderWatch() {
   const [mirrors, setMirrors] = useState<Record<string, PMirror[]>>({});
 
   const resolve = useMutation({
-    mutationFn: async (s: PSource) => {
-      if (mirrors[s.token]) return mirrors[s.token];
+    mutationFn: async (s: PSource): Promise<PMirror[]> => {
+      const cached = mirrors[s.token];
+      if (cached) return cached;
       const m = await resolveSource({ data: { token: s.token } });
       setMirrors((prev) => ({ ...prev, [s.token]: m }));
       return m;
@@ -143,9 +144,9 @@ function ProviderWatch() {
                               {!s.playable && <span className="text-[11px] font-semibold text-muted-foreground">· Download only</span>}
                             </div>
                             <p className="mt-1 break-words text-xs text-foreground/80">{s.filename}</p>
-                            {mirrors[s.token] && mirrors[s.token].length > 1 && (
+                            {(mirrors[s.token]?.length ?? 0) > 1 && (
                               <div className="mt-1 flex flex-wrap gap-1">
-                                {mirrors[s.token].map((m) => (
+                                {(mirrors[s.token] ?? []).map((m) => (
                                   <button key={m.url} type="button" onClick={() => download(s, m)} className="rounded bg-foreground/10 px-2 py-0.5 text-[11px] text-foreground hover:bg-foreground/20">
                                     {m.label}
                                   </button>
