@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
-import { getTx, startMobileMoney, syncTransaction, startCardCheckout, syncCardPayment } from "@/lib/payments";
+import { getTx, startMobileMoney, syncTransaction, startCardCheckout, syncCardPayment, startPayPal, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
 import type { Row } from "@/lib/fdb";
 import { lazy, Suspense } from "react";
@@ -11,11 +11,11 @@ export const Route = createFileRoute("/pay/$id")({
   head: () => ({
     meta: [
       { title: "Complete your payment — LUOFILM.SITE" },
-      { name: "description", content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay or Apple Pay." },
+      { name: "description", content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal." },
       { property: "og:title", content: "Complete your payment — LUOFILM.SITE" },
       {
         property: "og:description",
-        content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay or Apple Pay.",
+        content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -25,13 +25,14 @@ export const Route = createFileRoute("/pay/$id")({
   component: PayPage,
 });
 
-type Method = "mobile_money" | "card" | "google_pay" | "apple_pay";
+type Method = "mobile_money" | "card" | "google_pay" | "apple_pay" | "paypal";
 
 const METHODS: { id: Method; label: string; icon: typeof Smartphone }[] = [
   { id: "mobile_money", label: "Mobile Money", icon: Smartphone },
   { id: "card", label: "Card", icon: CreditCard },
   { id: "google_pay", label: "Google Pay", icon: Wallet },
   { id: "apple_pay", label: "Apple Pay", icon: Wallet },
+  { id: "paypal", label: "PayPal", icon: Wallet },
 ];
 
 function PayPage() {

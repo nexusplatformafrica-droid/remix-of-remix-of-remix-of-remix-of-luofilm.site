@@ -242,6 +242,8 @@ export function SubscribeModal({
     if (!user) return;
     setPhase("waiting");
     setStatus("Preparing the secure payment page…");
+    // Open the tab right away so pop-up blockers allow it.
+    const win = window.open("about:blank", "_blank");
     try {
       const tx = await createPaymentIntent({
         userId: user.id,
@@ -251,8 +253,6 @@ export function SubscribeModal({
         amount: localPrice,
       });
       liveTx.current = tx;
-      // Open the tab first (synchronously-ish) so pop-up blockers allow it.
-      const win = window.open("about:blank", "_blank");
       const url = method === "paypal" ? await startPayPal(tx) : await startCardCheckout(tx);
       if (win) win.location.href = url;
       else window.open(url, "_blank");
@@ -261,6 +261,7 @@ export function SubscribeModal({
       setStatus("Finish the payment in the new tab — this page updates automatically once it's confirmed.");
     } catch (err) {
       setPhase("failed");
+      win?.close();
       setStatus(err instanceof Error ? err.message : "Could not start the card payment.");
       setFailOpen(true);
     }
