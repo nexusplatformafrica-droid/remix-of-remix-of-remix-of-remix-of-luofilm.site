@@ -247,7 +247,7 @@ function HomePage() {
                                     .join(" · ")}
                                 </p>
                               </div>
-                            </Link>
+                            </HeroLink>
                           </div>
                         </div>
                       ))}
