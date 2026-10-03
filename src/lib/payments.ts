@@ -1,4 +1,5 @@
 import { startWhopCheckout, checkWhopPayment } from "./whop.functions";
+import { startPayPalCheckout, checkPayPalPayment } from "./paypal.functions";
 import { fdb, nowIso, uuid, type Row } from "./fdb";
 import { countryByCurrency, countryFromPhone, isValidFor, normalizeFor } from "./countries";
 import { CURRENCY_CODE, readStatus, relworx } from "./relworx";
@@ -13,7 +14,7 @@ export type PayPlan = {
   /** How many devices this plan allows to be signed in at once. */
   devices?: number;
 };
-export type PayMethod = "mobile_money" | "link" | "card" | "google_pay" | "apple_pay";
+export type PayMethod = "mobile_money" | "link" | "card" | "google_pay" | "apple_pay" | "paypal";
 
 const LAST_TX = "last_payment_tx";
 
@@ -304,6 +305,49 @@ export async function syncCardPayment(txId: string): Promise<SyncResult> {
     .update({ status: "completed", completed_at: nowIso(), note: `Card payment ${res.paymentId}` })
     .eq("id", txId);
   await activateSubscription(tx, "whop");
+  forgetTx();
+  return { status: "completed", message: "Payment confirmed" };
+}
+
+/** PayPal: creates a live PayPal order for this transaction and returns its payment page. */
+export async function startPayPal(tx: Row) {
+  const res = await startPayPalCheckout({
+    data: {
+      txId: String(tx.id),
+      reference: String(tx.reference ?? tx.id),
+      planName: String(tx.plan_name ?? "Membership"),
+      amount: Number(tx.amount),
+      currency: String(tx.currency ?? CURRENCY_CODE).toUpperCase(),
+      origin: window.location.origin,
+    },
+  });
+  if (!res || !res.ok) throw new Error(res?.message || "PayPal could not start.");
+  await fdb
+    .from("luo_transactions")
+    .update({ internal_reference: res.orderId, method: "paypal", used_at: nowIso() })
+    .eq("id", String(tx.id));
+  return res.url;
+}
+
+/** Polled while PayPal is open; captures and activates once PayPal confirms. */
+export async function syncPayPalPayment(txId: string): Promise<SyncResult> {
+  const tx = await getTx(txId);
+  if (!tx) return { status: "pending", message: "Waiting for confirmation" };
+  const status = String(tx.status ?? "").toLowerCase();
+  if (status === "completed") return { status: "completed", message: "Payment confirmed" };
+  if (status === "failed") return { status: "failed", message: String(tx.note ?? "Payment failed") };
+  if (!tx.internal_reference) return { status: "pending", message: "Waiting for PayPal" };
+  const res = await checkPayPalPayment({ data: { txId, orderId: String(tx.internal_reference) } }).catch(() => null);
+  if (res?.failed) {
+    await fdb.from("luo_transactions").update({ status: "failed", note: res.message }).eq("id", txId);
+    return { status: "failed", message: res.message };
+  }
+  if (!res || res.paid !== true || !res.captureId) return { status: "pending", message: res?.message ?? "Complete the payment in the PayPal tab" };
+  await fdb
+    .from("luo_transactions")
+    .update({ status: "completed", completed_at: nowIso(), note: `PayPal payment ${res.captureId}` })
+    .eq("id", txId);
+  await activateSubscription(tx, "paypal");
   forgetTx();
   return { status: "completed", message: "Payment confirmed" };
 }
