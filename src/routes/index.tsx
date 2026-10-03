@@ -233,18 +233,15 @@ function HomePage() {
                                 <div className="size-full bg-muted" />
                               )}
 
-                              {/* Bottom fade inside the card for readable text. */}
-                              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-
-                              <div className="absolute bottom-0 left-0 flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3 lg:p-4">
-                                <h2 className="line-clamp-2 text-[11px] font-bold leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-sm lg:text-base">
+                              <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-1 p-2 sm:gap-1.5 sm:p-3 lg:p-4">
+                                <h2 className="line-clamp-2 rounded-md bg-background px-2 py-1 text-[11px] font-bold leading-tight text-foreground sm:text-sm lg:text-base">
                                   {s.title}
                                 </h2>
-                                <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md transition-colors group-hover:bg-white/30 sm:px-2.5 sm:py-1.5 sm:text-xs">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[10px] font-semibold text-primary-foreground sm:px-2.5 sm:py-1.5 sm:text-xs">
                                   <Play className="size-3 fill-current sm:size-3.5" />
                                   {s.promo ? "Open" : "Play"}
                                 </span>
-                                <p className="hidden max-w-[240px] truncate text-[10px] text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] sm:block">
+                                <p className="hidden max-w-[240px] truncate rounded-md bg-background px-2 py-1 text-[10px] text-foreground sm:block">
                                   {s.meta}
                                 </p>
                               </div>
