@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -7,4 +8,11 @@
 >
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
+
 <!-- LOVABLE:END -->
+
+- Catalog playback and downloads must use only direct full-file resources from the TV BFF through `/api/public/movie`; never restore mobile resource, DASH, or stream-rebuild fallbacks because they served promos or incomplete files.
+- Catalog downloads stream the authenticated `/api/public/movie` response through the same-origin download service worker; why: the browser manager needs real size/progress while protected preview hosts reject a separate unauthenticated attachment navigation.
+- All catalog TV-BFF calls (home rails included) must run through server functions (`src/lib/catalog.functions.ts`); the TV gateway blocks browser origins with CORS, so client components must never import `fetchSection`/`searchCatalog` or other `moviebox.ts` functions directly.
+- Activity records capture only signed-in users' actionable clicks, internal destinations, and page paths; never store typed field values or other sensitive input.
+- Keep every existing sitemap in the sitemap index and robots file when adding a new content-group sitemap, because external indexes may already rely on those URLs.

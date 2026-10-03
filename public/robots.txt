@@ -1,14 +1,88 @@
+# LUOFILM — open to every search engine, social network, AI agent and crawler.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /pay/
+
 User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Video
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
-User-agent: Twitterbot
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: Applebot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: Twitterbot
 Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Pinterestbot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+Sitemap: https://luofilm.site/sitemap.xml
+Sitemap: https://luofilm.site/sitemap-pages.xml
+Sitemap: https://luofilm.site/sitemap-movies.xml
+Sitemap: https://luofilm.site/sitemap-series.xml
+Sitemap: https://luofilm.site/sitemap-animations.xml
+Sitemap: https://luofilm.site/sitemap-luo-movies.xml
+Sitemap: https://luofilm.site/sitemap-luganda-movies.xml
+Sitemap: https://luofilm.site/sitemap-vj.xml
+Sitemap: https://luofilm.site/sitemap-images.xml
+Sitemap: https://luofilm.site/sitemap-videos.xml
