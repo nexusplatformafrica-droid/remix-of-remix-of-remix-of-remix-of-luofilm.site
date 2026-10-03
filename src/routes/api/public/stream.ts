@@ -80,8 +80,30 @@ export const Route = createFileRoute("/api/public/stream")({
 
         const range = request.headers.get("range");
         const upstream = await fetch(parsed.toString(), {
-          headers: range ? { range } : {},
-        });
+          headers: {
+            "user-agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+            accept: "*/*",
+            ...(range ? { range } : {}),
+          },
+        }).catch(() => null);
+        // Some file hosts refuse our server. For downloads, send the browser
+        // straight to the host instead (it serves the file as an attachment).
+        if (!upstream || [403, 429, 500, 502, 503, 504].includes(upstream.status)) {
+          await upstream?.body?.cancel();
+          if (filename || !upstream) {
+            return new Response(null, {
+              status: 307,
+              headers: {
+                location: parsed.toString(),
+                "cache-control": "no-store",
+                "referrer-policy": "no-referrer",
+                "access-control-allow-origin": "*",
+              },
+            });
+          }
+        }
+        if (!upstream) return new Response("Unavailable", { status: 502 });
 
         const headers = new Headers();
         for (const key of [
