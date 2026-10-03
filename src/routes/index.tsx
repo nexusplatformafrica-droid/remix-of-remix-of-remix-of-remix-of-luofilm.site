@@ -15,7 +15,7 @@ import { balanceTrending } from "@/lib/trending-filter";
 import { HOME_SECTIONS } from "@/lib/home-sections";
 import { heroHref, loadHeroSlides } from "@/lib/hero";
 
-type HeroCard = { id: string; title: string; image: string | null; watchId?: string; href: string; vj?: string | null; promo: boolean; meta: string };
+type HeroCard = { id: string; title: string; image: string | null; watchId?: string | undefined; href: string; vj?: string | null; promo: boolean; meta: string };
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
