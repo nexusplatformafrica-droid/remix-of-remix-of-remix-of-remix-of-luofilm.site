@@ -35,7 +35,11 @@ export const providerHome = createServerFn({ method: "GET" })
       const o = await import("./providers/others.server");
       const items =
         data.provider === "4khdhub" ? await fk.fkHome()
-        : data.provider === "dramachi" ? await o.drSearch("2025")
+        : data.provider === "dramachi" ? await (async () => {
+            const seen = new Set<string>();
+            const all = await Promise.all(["2026", "2025", "2024"].flatMap((y) => [1, 2].map((pg) => o.drSearch(y, pg).catch(() => []))));
+            return all.flat().filter((i) => !seen.has(i.id) && !!seen.add(i.id));
+          })()
         : data.provider === "addons" ? await o.cmHome()
         : data.provider === "circleftp" ? await o.cfHome()
         : await o.dfSearch();

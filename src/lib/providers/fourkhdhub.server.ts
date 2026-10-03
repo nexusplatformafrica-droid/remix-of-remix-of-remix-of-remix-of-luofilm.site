@@ -42,7 +42,11 @@ function cards(html: string): PItem[] {
 }
 
 export const fkSearch = async (q: string) => cards(await get(`${BASE}/?s=${encodeURIComponent(q)}`));
-export const fkHome = async () => cards(await get(`${BASE}/`));
+export const fkHome = async () => {
+  const pages = await Promise.all([`${BASE}/`, `${BASE}/page/2/`, `${BASE}/page/3/`].map((u) => get(u).then(cards).catch(() => [] as PItem[])));
+  const seen = new Set<string>();
+  return pages.flat().filter((i) => !seen.has(i.id) && !!seen.add(i.id));
+};
 
 const safeId = (id: string) => {
   if (!/^[\w-]+$/.test(id)) throw new Error("Bad id");

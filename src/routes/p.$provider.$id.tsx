@@ -8,6 +8,8 @@ import { TopBar } from "@/components/youku/TopBar";
 import { MobileNav } from "@/components/youku/MobileNav";
 import { Player } from "@/components/youku/Player";
 import { MoviVideo, needsMovi } from "@/components/youku/MoviVideo";
+import { SubscribeGate } from "@/components/youku/SubscribeGate";
+import { useSubscription } from "@/hooks/useSubscription";
 import { ProviderCard, providerGrid } from "@/components/providers/ProviderCard";
 import { providerDetails, providerHome, providerSearch, resolveSource } from "@/lib/providers.functions";
 import { providerName, qualityRank, type PMirror, type PSource, type ProviderId } from "@/lib/providers/types";
@@ -45,6 +47,7 @@ function ProviderWatch() {
     staleTime: 10 * 60 * 1000,
   });
   const [playing, setPlaying] = useState<{ src: PSource; url: string } | null>(null);
+  const [locked, setLocked] = useState(false);
   const [mirrors, setMirrors] = useState<Record<string, PMirror[]>>({});
 
   const resolve = useMutation({
@@ -57,7 +60,9 @@ function ProviderWatch() {
     },
   });
 
+  const { canPlay, openSubscribe } = useSubscription();
   const play = async (s: PSource) => {
+    if (!canPlay) { setLocked(true); openSubscribe(); return; }
     try {
       const m = await resolve.mutateAsync(s);
       if (!m[0]) throw new Error("No file"); setPlaying({ src: s, url: relay(m[0].url) });
@@ -67,6 +72,7 @@ function ProviderWatch() {
     }
   };
   const download = async (s: PSource, mirror?: PMirror) => {
+    if (!canPlay) { setLocked(true); openSubscribe(); return; }
     try {
       const m = mirror ? [mirror] : await resolve.mutateAsync(s);
       const url = m[0]?.url; if (!url) throw new Error("No file");
@@ -134,8 +140,9 @@ function ProviderWatch() {
             <>
               <div className={`mt-3 grid gap-4 ${isSeries ? "lg:grid-cols-[minmax(0,1fr)_320px]" : ""}`}>
                 <div className="min-w-0">
-                  <div className="overflow-hidden rounded-2xl bg-muted ring-1 ring-border">
-                    {playing ? (
+                  <div className="relative overflow-hidden rounded-2xl bg-muted ring-1 ring-border">
+                    {locked && !canPlay && <SubscribeGate title={d.title} />}
+                    {playing && canPlay ? (
                       needsMovi(`${playing.src.filename ?? ""} ${playing.src.quality ?? ""}`) || !playing.src.playable ? (
                         <MoviVideo key={playing.url} src={playing.url} poster={d.backdrop ?? d.poster ?? undefined} className="aspect-video w-full" />
                       ) : (
