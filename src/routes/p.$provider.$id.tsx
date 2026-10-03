@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/youku/Sidebar";
 import { TopBar } from "@/components/youku/TopBar";
 import { MobileNav } from "@/components/youku/MobileNav";
 import { Player } from "@/components/youku/Player";
+import { MoviVideo, needsMovi } from "@/components/youku/MoviVideo";
 import { ProviderCard, providerGrid } from "@/components/providers/ProviderCard";
 import { providerDetails, providerHome, providerSearch, resolveSource } from "@/lib/providers.functions";
 import { providerName, qualityRank, type PMirror, type PSource, type ProviderId } from "@/lib/providers/types";
@@ -123,7 +124,11 @@ function ProviderWatch() {
             <>
               {playing && (
                 <div className="mt-3 overflow-hidden rounded-2xl bg-muted ring-1 ring-border">
-                  <Player key={playing.url} src={playing.url} kind="mp4" poster={d.backdrop ?? d.poster ?? undefined} title={d.title} className="aspect-video w-full" />
+                  {needsMovi(`${playing.src.filename ?? ""} ${playing.src.quality ?? ""}`) ? (
+                    <MoviVideo key={playing.url} src={playing.url} poster={d.backdrop ?? d.poster ?? undefined} className="aspect-video w-full" />
+                  ) : (
+                    <Player key={playing.url} src={playing.url} kind="mp4" poster={d.backdrop ?? d.poster ?? undefined} title={d.title} className="aspect-video w-full" />
+                  )}
                   <p className="p-2 text-[11px] text-muted-foreground">
                     {playing.src.quality} · {playing.src.filename} — if it doesn't play, use Download.
                   </p>
