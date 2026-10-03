@@ -86,7 +86,7 @@ export const resolveSource = createServerFn({ method: "POST" })
     }
     if (kind === "dr") {
       const { drResolve } = await import("./providers/others.server");
-      return drResolve(rest[0], rest[1]);
+      return drResolve(rest[0] ?? "", rest[1] ?? "");
     }
     if (kind === "url") return [{ label: "Direct", url: rest.join("|") }];
     throw new Error("Unknown source");

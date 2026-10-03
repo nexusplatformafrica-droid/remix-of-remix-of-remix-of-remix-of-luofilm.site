@@ -120,8 +120,8 @@ export async function cmHome() {
 
 export async function cmDetails(id: string): Promise<PDetails> {
   const [type, imdb] = id.split(":");
-  if (!/^(movie|series)$/.test(type) || !/^tt\d+$/.test(imdb ?? "")) throw new Error("Bad id");
-  const d = await json<{ meta?: Meta }>(`${CM}/meta/${type}/${imdb}.json`);
+  if (!/^(movie|series)$/.test(type ?? "") || !/^tt\d+$/.test(imdb ?? "")) throw new Error("Bad id");
+  const d = await json<{ meta?: Meta }>(`${CM}/meta/${type}/${imdb ?? ""}.json`);
   if (!d.meta) throw new Error("Not found");
   return {
     ...cmItem(d.meta),

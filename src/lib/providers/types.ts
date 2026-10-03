@@ -60,7 +60,7 @@ export const qualityRank = (q: string) => {
 
 export function detectExt(name: string) {
   const m = name.toLowerCase().match(/\.(mp4|mkv|webm|m4v|avi|mov|ts)(?:$|[?#\s])/);
-  return m ? m[1] : "mkv";
+  return m?.[1] ?? "mkv";
 }
 
 /** Browsers play mp4/webm; MKV only when it's not HEVC/AV1/10-bit/REMUX. */

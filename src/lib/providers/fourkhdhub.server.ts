@@ -188,7 +188,7 @@ export async function fkResolve(url: string): Promise<PMirror[]> {
     const html = await get(url);
     const m = html.match(/s\(\s*['"]o['"]\s*,\s*['"]([^'"]+)['"]/);
     if (!m) throw new Error("Mirror target missing");
-    const target = b64(JSON.parse(b64(rot13(b64(b64(m[1]))))).o);
+    const target = b64(JSON.parse(b64(rot13(b64(b64(m[1]!))))).o);
     return fkResolve(target);
   }
   if (host.includes("hubcloud.")) return fromHubCloud(url);

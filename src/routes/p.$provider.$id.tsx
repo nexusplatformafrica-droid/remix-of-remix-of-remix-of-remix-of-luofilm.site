@@ -56,7 +56,7 @@ function ProviderWatch() {
   const play = async (s: PSource) => {
     try {
       const m = await resolve.mutateAsync(s);
-      setPlaying({ src: s, url: relay(m[0].url) });
+      if (!m[0]) throw new Error("No file"); setPlaying({ src: s, url: relay(m[0].url) });
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "This source is unavailable");
@@ -65,7 +65,7 @@ function ProviderWatch() {
   const download = async (s: PSource, mirror?: PMirror) => {
     try {
       const m = mirror ? [mirror] : await resolve.mutateAsync(s);
-      const url = m[0].url;
+      const url = m[0]?.url; if (!url) throw new Error("No file");
       const name = dlName(s);
       await startWorkerDownload(url.startsWith("https://") ? `${streamUrl(url)}&dl=${encodeURIComponent(name)}` : url, name);
       toast.success("Download started — check your browser downloads");
