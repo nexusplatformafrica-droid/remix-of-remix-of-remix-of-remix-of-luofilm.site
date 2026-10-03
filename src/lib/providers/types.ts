@@ -3,8 +3,6 @@ export const PROVIDERS = [
   { id: "4khdhub", name: "4KHDHub", blurb: "4K UHD, HDR, REMUX & 1080p releases" },
   { id: "dramachi", name: "Dramachi", blurb: "Hollywood, Asian dramas & series" },
   { id: "addons", name: "Addons", blurb: "Stremio Cinemeta catalog, sources from every provider" },
-  { id: "circleftp", name: "CircleFTP", blurb: "BDIX mirror (Bangladesh networks only)" },
-  { id: "dhakaflix", name: "DhakaFlix", blurb: "BDIX indexer (Bangladesh networks only)" },
 ] as const;
 
 export type ProviderId = (typeof PROVIDERS)[number]["id"];

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
 import { PROVIDERS } from "@/lib/providers/types";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -31,6 +31,15 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
   const { openSubscribe } = useSubscription();
   const [authOpen, setAuthOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const staffQ = useQuery({
+    queryKey: ["my-staff-role", user?.id],
+    enabled: !!user && !isAdmin,
+    queryFn: async () => {
+      const { data } = await fdb.from("user_roles").select("*").eq("user_id", user!.id).maybeSingle();
+      return data?.role === "staff";
+    },
+  });
+  const isStaff = !!staffQ.data;
 
   const pill = (active: boolean) =>
     `grid h-8 place-items-center rounded-full px-3.5 text-[12px] font-black uppercase tracking-wide transition ${
@@ -41,8 +50,8 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
 
   return (
     <>
-      <div className="search-glow shrink-0 rounded-full p-[1.5px]">
-      <div className="flex shrink-0 items-center gap-1 rounded-full bg-background/85 p-1 shadow-lg backdrop-blur-xl">
+      <div className="search-glow min-w-0 max-w-[calc(100vw-1rem)] shrink rounded-full p-[1.5px] lg:max-w-none lg:shrink-0">
+      <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-full bg-background/85 p-1 shadow-lg backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-visible">
         {/* Brand inside the float on mobile only (desktop sidebar shows it). */}
         <Link to="/" className="flex shrink-0 items-center gap-1.5 pl-1.5 pr-1 lg:hidden">
           <img src={markAsset} alt="LUOFILM logo" className="h-5 w-auto sm:h-6" />
@@ -88,7 +97,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
             to="/p/$provider"
             params={{ provider: p.id }}
             title={p.blurb}
-            className={`${pill(pathname === `/p/${p.id}` || pathname.startsWith(`/p/${p.id}/`))}`}
+            className={`${pill(pathname === `/p/${p.id}` || pathname.startsWith(`/p/${p.id}/`))} shrink-0 whitespace-nowrap`}
           >
             {p.name}
           </Link>
@@ -130,7 +139,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
                 onMouseLeave={() => setMenu(false)}
               >
                 <p className="truncate px-3 py-2 text-[11px] text-muted-foreground">{user.email}</p>
-                {isAdmin && (
+                {(isAdmin || isStaff) && (
                   <Link
                     to="/admin"
                     onClick={() => setMenu(false)}
