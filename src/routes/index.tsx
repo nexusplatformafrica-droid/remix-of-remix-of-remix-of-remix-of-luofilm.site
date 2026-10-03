@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
@@ -13,6 +13,9 @@ import { isAdultItem } from "@/lib/categories";
 import { getHome, getTrending, getSection } from "@/lib/catalog.functions";
 import { balanceTrending } from "@/lib/trending-filter";
 import { HOME_SECTIONS } from "@/lib/home-sections";
+import { heroHref, loadHeroSlides } from "@/lib/hero";
+
+type HeroCard = { id: string; title: string; image: string | null; watchId?: string; href: string; vj?: string | null; promo: boolean; meta: string };
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
@@ -239,12 +242,10 @@ function HomePage() {
                                 </h2>
                                 <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md transition-colors group-hover:bg-white/30 sm:px-2.5 sm:py-1.5 sm:text-xs">
                                   <Play className="size-3 fill-current sm:size-3.5" />
-                                  Play
+                                  {s.promo ? "Open" : "Play"}
                                 </span>
                                 <p className="hidden max-w-[240px] truncate text-[10px] text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] sm:block">
-                                  {[s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null]
-                                    .filter(Boolean)
-                                    .join(" · ")}
+                                  {s.meta}
                                 </p>
                               </div>
                             </HeroLink>
@@ -298,5 +299,20 @@ function HomePage() {
       <ReferralBanner />
       <MobileNav />
     </div>
+  );
+}
+
+function HeroLink({ card, children, ...rest }: { card: HeroCard; children: ReactNode; tabIndex: number; className: string }) {
+  if (card.watchId)
+    return (
+      <Link to="/watch/$id" params={{ id: card.watchId }} {...rest}>
+        {children}
+      </Link>
+    );
+  const external = /^https?:\/\//.test(card.href);
+  return (
+    <a href={card.href} {...rest} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+      {children}
+    </a>
   );
 }

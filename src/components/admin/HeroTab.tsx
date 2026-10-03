@@ -22,7 +22,7 @@ export function HeroTab() {
 
   const add = (s: HeroSlide) => {
     if (slides.some((x) => x.kind === s.kind && x.refId && x.refId === s.refId))
-      return toast.info("Already in the hero");
+      return void toast.info("Already in the hero");
     setSlides((p) => [...p, s]);
   };
   const move = (i: number, d: number) =>
@@ -30,7 +30,7 @@ export function HeroTab() {
       const n = [...p];
       const j = i + d;
       if (j < 0 || j >= n.length) return p;
-      [n[i], n[j]] = [n[j], n[i]];
+      [n[i], n[j]] = [n[j]!, n[i]!];
       return n;
     });
 
