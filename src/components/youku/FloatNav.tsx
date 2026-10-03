@@ -169,9 +169,10 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
                   <ChevronRight className="size-3.5 text-muted-foreground" />
                 </Link>
               ))}
-            </div>
-          </>
-        )}
+              </div>
+            </>,
+            document.body,
+          )}
         <button
           type="button"
           onClick={openSubscribe}
