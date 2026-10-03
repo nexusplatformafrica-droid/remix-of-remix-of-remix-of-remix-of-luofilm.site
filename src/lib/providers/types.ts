@@ -5,7 +5,7 @@ export const PROVIDERS = [
   { id: "addons", name: "Addons", blurb: "Stremio Cinemeta catalog, sources from every provider" },
 ] as const;
 
-export type ProviderId = (typeof PROVIDERS)[number]["id"];
+export type ProviderId = (typeof PROVIDERS)[number]["id"] | "circleftp" | "dhakaflix";
 
 export const providerName = (id: string) => PROVIDERS.find((p) => p.id === id)?.name ?? id;
 
