@@ -14,3 +14,7 @@
 - [x] Add privacy-safe signed-in activity tracking and an admin activity view with user name and phone when available.
 - [x] Preserve the current sitemap index and add separate series and animation discovery files.
 - [x] Whop: new key, find company id, embed Whop native checkout (card/Google/Apple)
+- [x] Fix hosted-site crash ("This page didn't load") caused by the QR code library.
+- [x] Fix provider downloads saving "file not available" (dead mirrors) and Moviebox/subtitle downloads on the hosted site.
+- [x] Add live PayPal checkout (membership modal + pay page); fix Whop embedded form receiving a URL instead of a session id.
+- [ ] Whop live payments: blocked until WHOP_API_KEY and WHOP_COMPANY_ID are added (user action).
