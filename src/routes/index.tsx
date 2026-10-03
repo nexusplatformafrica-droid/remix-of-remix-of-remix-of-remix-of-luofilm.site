@@ -77,6 +77,20 @@ function HomePage() {
   const wideTrending = useQuery(trendingQuery);
   const slides = data?.hero ?? [];
   const [index, setIndex] = useState(0);
+  // Hero cards pass together as a grid: 2 per page on mobile, 4 on desktop.
+  const [isWide, setIsWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => setIsWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  const perPage = isWide ? 4 : 2;
+  const pageCount = Math.max(1, Math.ceil(slides.length / perPage));
+  const heroPages = Array.from({ length: pageCount }, (_, p) =>
+    slides.slice(p * perPage, (p + 1) * perPage),
+  );
 
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
@@ -89,10 +103,11 @@ function HomePage() {
   }, [degraded, refetch]);
 
   useEffect(() => {
-    if (slides.length < 2) return;
-    const t = setInterval(() => setIndex((i) => (i + 1) % slides.length), 6000);
+    if (pageCount < 2) return;
+    setIndex((i) => Math.min(i, pageCount - 1));
+    const t = setInterval(() => setIndex((i) => (i + 1) % pageCount), 6000);
     return () => clearInterval(t);
-  }, [slides.length]);
+  }, [pageCount]);
 
 
   const slide = slides[Math.min(index, Math.max(slides.length - 1, 0))];
@@ -151,7 +166,11 @@ function HomePage() {
 
           {!data && (
             <div className="px-3 pt-4 sm:px-4 lg:px-8">
-              <div className="aspect-[16/9] w-full animate-pulse rounded-2xl bg-muted/40 sm:aspect-[21/9]" />
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="aspect-[16/9] animate-pulse rounded-xl bg-muted/40" />
+                ))}
+              </div>
             </div>
           )}
 
