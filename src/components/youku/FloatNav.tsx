@@ -126,15 +126,16 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
             <ChevronDown className={`size-3.5 transition-transform ${providersOpen ? "rotate-180" : ""}`} />
           </span>
         </button>
-        {providersOpen && (
-          <>
-            <button
-              type="button"
-              aria-label="Close providers"
-              className="fixed inset-0 z-40 lg:hidden"
-              onClick={() => setProviders(false)}
-            />
-            <div className="fixed right-2 top-14 z-50 w-56 overflow-hidden rounded-xl bg-card/95 p-1.5 shadow-2xl ring-1 ring-border backdrop-blur-xl lg:hidden">
+        {providersOpen &&
+          createPortal(
+            <>
+              <button
+                type="button"
+                aria-label="Close providers"
+                className="fixed inset-0 z-40 lg:hidden"
+                onClick={() => setProviders(false)}
+              />
+              <div className="fixed right-2 top-14 z-50 w-56 overflow-hidden rounded-xl bg-card/95 p-1.5 shadow-2xl ring-1 ring-border backdrop-blur-xl lg:hidden">
               <p className="px-2.5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Browse by provider
               </p>
