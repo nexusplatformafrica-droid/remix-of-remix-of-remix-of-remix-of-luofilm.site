@@ -77,6 +77,20 @@ function HomePage() {
   const wideTrending = useQuery(trendingQuery);
   const slides = data?.hero ?? [];
   const [index, setIndex] = useState(0);
+  // Hero cards pass together as a grid: 2 per page on mobile, 4 on desktop.
+  const [isWide, setIsWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => setIsWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  const perPage = isWide ? 4 : 2;
+  const pageCount = Math.max(1, Math.ceil(slides.length / perPage));
+  const heroPages = Array.from({ length: pageCount }, (_, p) =>
+    slides.slice(p * perPage, (p + 1) * perPage),
+  );
 
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
@@ -89,10 +103,11 @@ function HomePage() {
   }, [degraded, refetch]);
 
   useEffect(() => {
-    if (slides.length < 2) return;
-    const t = setInterval(() => setIndex((i) => (i + 1) % slides.length), 6000);
+    if (pageCount < 2) return;
+    setIndex((i) => Math.min(i, pageCount - 1));
+    const t = setInterval(() => setIndex((i) => (i + 1) % pageCount), 6000);
     return () => clearInterval(t);
-  }, [slides.length]);
+  }, [pageCount]);
 
 
   const slide = slides[Math.min(index, Math.max(slides.length - 1, 0))];
@@ -151,7 +166,11 @@ function HomePage() {
 
           {!data && (
             <div className="px-3 pt-4 sm:px-4 lg:px-8">
-              <div className="aspect-[16/9] w-full animate-pulse rounded-2xl bg-muted/40 sm:aspect-[21/9]" />
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="aspect-[16/9] animate-pulse rounded-xl bg-muted/40" />
+                ))}
+              </div>
             </div>
           )}
 
@@ -159,64 +178,71 @@ function HomePage() {
 
           {slide && (
             <section className="relative px-3 pt-4 sm:px-4 lg:px-8">
-              {/* Sliding track: every slide sits in its own big rounded holder. */}
+              {/* Sliding track: cards pass together as a grid — 2 per page on
+                  mobile, 4 per page on desktop — each in its own holder. */}
               <div className="overflow-hidden">
                 <div
                   className="flex transition-transform duration-700 ease-out"
                   style={{ transform: `translateX(-${index * 100}%)` }}
                 >
-                  {slides.map((s, i) => (
-                    <div key={s.id} className="w-full shrink-0 px-0.5">
-                      <Link
-                        to="/watch/$id"
-                        params={{ id: s.id }}
-                        className="group relative block aspect-[16/9] w-full overflow-hidden rounded-2xl bg-card shadow-lg ring-1 ring-foreground/10 sm:aspect-[21/9]"
-                        aria-hidden={i !== index}
-                        tabIndex={i === index ? 0 : -1}
-                      >
-                        {s.backdrop ? (
-                          <img
-                            src={s.backdrop}
-                            alt={s.title}
-                            loading={i === 0 ? "eager" : "lazy"}
-                            fetchPriority={i === 0 ? "high" : "auto"}
-                            decoding="async"
-                            className="size-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
-                          />
-                        ) : (
-                          <div className="size-full bg-muted" />
-                        )}
+                  {heroPages.map((pageSlides, p) => (
+                    <div
+                      key={p}
+                      className="grid w-full shrink-0 grid-cols-2 gap-2 px-0.5 sm:grid-cols-4 sm:gap-3"
+                      aria-hidden={p !== index}
+                    >
+                      {pageSlides.map((s, i) => (
+                        <Link
+                          key={s.id}
+                          to="/watch/$id"
+                          params={{ id: s.id }}
+                          className="group relative block aspect-[16/9] overflow-hidden rounded-xl bg-card shadow-md ring-1 ring-foreground/10 sm:rounded-2xl"
+                          tabIndex={p === index ? 0 : -1}
+                        >
+                          {s.backdrop ? (
+                            <img
+                              src={s.backdrop}
+                              alt={s.title}
+                              loading={p === 0 ? "eager" : "lazy"}
+                              fetchPriority={p === 0 ? "high" : "auto"}
+                              decoding="async"
+                              className="size-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.04]"
+                            />
+                          ) : (
+                            <div className="size-full bg-muted" />
+                          )}
 
-                        {/* Bottom fade inside the card for readable text. */}
-                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+                          {/* Bottom fade inside the card for readable text. */}
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
 
-                        <div className="absolute bottom-0 left-0 flex max-w-xl flex-col gap-1.5 p-4 sm:p-6 lg:gap-3 lg:p-8">
-                          <h1 className="text-base font-black tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-xl lg:text-3xl">
-                            {s.title}
-                          </h1>
-                          <span className="mt-1 flex w-[120px] items-center justify-center gap-2 rounded bg-white/20 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-colors group-hover:bg-white/30">
-                            <Play className="size-4 fill-current" />
-                            Play
-                          </span>
-                          <p className="max-w-md truncate text-[11px] text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
-                            {[s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </p>
-                        </div>
-                      </Link>
+                          <div className="absolute bottom-0 left-0 flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3 lg:p-4">
+                            <h2 className="line-clamp-2 text-[11px] font-bold leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-sm lg:text-base">
+                              {s.title}
+                            </h2>
+                            <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md transition-colors group-hover:bg-white/30 sm:px-2.5 sm:py-1.5 sm:text-xs">
+                              <Play className="size-3 fill-current sm:size-3.5" />
+                              Play
+                            </span>
+                            <p className="hidden max-w-[200px] truncate text-[10px] text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] sm:block">
+                              {[s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
                   ))}
                 </div>
               </div>
 
-              {slides.length > 1 && (
+              {pageCount > 1 && (
                 <div className="mt-3 flex justify-center gap-2">
-                  {slides.map((s, i) => (
+                  {heroPages.map((_, i) => (
                     <button
-                      key={s.id}
+                      key={i}
                       type="button"
-                      aria-label={`Show slide ${i + 1}`}
+                      aria-label={`Show page ${i + 1}`}
                       onClick={() => setIndex(i)}
                       className={`h-1.5 rounded-full transition-all ${
                         i === index ? "w-6 bg-brand" : "w-2 bg-foreground/40"
