@@ -9,6 +9,7 @@ import {
   deleteDownloadRecord,
   downloadCatalogFile,
   DownloadAborted,
+  NeedsNativeDownload,
   listDownloadRecords,
   setDownloadStatus,
   type CatalogDownloadInput,
@@ -65,6 +66,18 @@ function runMovie(input: CatalogDownloadInput) {
   )
     .then(() => upsert({ id: input.id, status: "done", percent: 100 }))
     .catch((e: unknown) => {
+      if (e instanceof NeedsNativeDownload) {
+        // Hand the file to the browser's own download manager instead.
+        const a = document.createElement("a");
+        a.href = `${input.url}&dl=${encodeURIComponent(input.filename)}`;
+        a.download = input.filename;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        upsert({ id: input.id, status: "done", percent: 100, error: undefined });
+        return;
+      }
       if (e instanceof DownloadAborted || controller.signal.aborted) {
         if (items.some((i) => i.id === input.id)) upsert({ id: input.id, status: "paused" });
       } else {
