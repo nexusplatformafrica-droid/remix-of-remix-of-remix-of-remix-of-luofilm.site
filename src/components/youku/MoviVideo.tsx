@@ -5,7 +5,7 @@
 import { createElement, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-export function MoviVideo({ src, poster, className }: { src: string; poster?: string; className?: string }) {
+export function MoviVideo({ src, poster, className }: { src: string; poster?: string | undefined; className?: string | undefined }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let alive = true;
