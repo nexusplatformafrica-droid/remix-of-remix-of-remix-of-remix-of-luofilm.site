@@ -216,7 +216,7 @@ function HomePage() {
                                 </span>
                               )}
                               {s.promo && (
-                                <span className="absolute left-2 top-2 z-10 rounded-md bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase text-foreground backdrop-blur sm:text-xs">
+                                <span className="absolute left-2 top-2 z-10 rounded-md bg-background px-2 py-0.5 text-[10px] font-bold uppercase text-foreground shadow sm:text-xs">
                                   Promo
                                 </span>
                               )}
