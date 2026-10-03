@@ -67,3 +67,12 @@ export function MobileMoneyLogo({ providers }: { providers: string[] }) {
     </span>
   );
 }
+
+export function PayPalLogo() {
+  return (
+    <span className="text-[13px] font-black italic tracking-tight" aria-label="PayPal">
+      <span className="text-[#003087]">Pay</span>
+      <span className="text-[#009CDE]">Pal</span>
+    </span>
+  );
+}
