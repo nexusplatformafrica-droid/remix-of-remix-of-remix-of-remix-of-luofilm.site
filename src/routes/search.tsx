@@ -12,6 +12,33 @@ import { GridSkeleton } from "@/components/youku/Skeletons";
 import { searchTitles } from "@/lib/catalog.functions";
 import { restListTitles } from "@/lib/luo-rest";
 import type { CatalogItem } from "@/lib/moviebox";
+import { providerSearch } from "@/lib/providers.functions";
+import { PROVIDERS, providerName, type ProviderId } from "@/lib/providers/types";
+import { ProviderCard, providerGrid } from "@/components/providers/ProviderCard";
+
+/** One provider's search hits; quietly hidden when it has none or is offline. */
+function ProviderResults({ provider, q }: { provider: ProviderId; q: string }) {
+  const res = useQuery({
+    queryKey: ["provider", provider, q],
+    queryFn: () => providerSearch({ data: { provider, q } }),
+    staleTime: 5 * 60 * 1000,
+  });
+  if (res.isPending)
+    return <p className="mt-8 text-xs text-muted-foreground">Searching {providerName(provider)}…</p>;
+  if (!res.data?.items.length) return null;
+  return (
+    <section className="mt-10">
+      <h2 className="mb-3 text-lg font-black text-foreground">
+        From {providerName(provider)} <span className="text-sm text-muted-foreground">({res.data.items.length})</span>
+      </h2>
+      <div className={providerGrid}>
+        {res.data.items.map((item) => (
+          <ProviderCard key={item.id} item={item} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 
 export const Route = createFileRoute("/search")({
@@ -151,6 +178,7 @@ function SearchPage() {
               </div>
             )}
           </div>
+          {q && PROVIDERS.map((p) => <ProviderResults key={p.id} provider={p.id} q={q} />)}
         </main>
       </div>
       <MobileNav />
