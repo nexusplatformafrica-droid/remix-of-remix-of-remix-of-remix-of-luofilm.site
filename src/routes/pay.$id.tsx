@@ -64,6 +64,8 @@ function PayPage() {
     } else if (q.get("whop") === "return") {
       setMethod("card");
       setWhopUrl("return");
+      setPhase("waiting");
+      setStatus("Confirming your card payment…");
     }
   }, [id]);
 
