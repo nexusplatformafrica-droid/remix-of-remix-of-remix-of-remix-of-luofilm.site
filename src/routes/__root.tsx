@@ -1,3 +1,4 @@
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -6,12 +7,24 @@ import {
   useRouter,
   HeadContent,
   Scripts,
-  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner";
+import { DownloadFloat } from "@/components/youku/DownloadFloat";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { AuthProvider } from "@/hooks/useAuth";
+import { DevToolsGuard } from "@/components/security/DevToolsGuard";
+import { WhatsAppPrompt } from "@/components/youku/WhatsAppPrompt";
+import { ReferralTracker } from "@/components/youku/ReferralTracker";
+import { DownloadTour } from "@/components/luo/DownloadTour";
+import { LiveSync } from "@/components/LiveSync";
+import { RouteProgress } from "@/components/youku/RouteProgress";
+import { ActivityTracker } from "@/components/ActivityTracker";
+
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { registerDownloadWorker } from "@/lib/download";
 
 function NotFoundComponent() {
   return (
@@ -78,23 +91,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "LUOFILM.SITE — Stream Movies and Series" },
+      { name: "description", content: "Stream movies and TV series in a built-in web player on LUOFILM.SITE." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      // Warm the poster/artwork CDNs so images start downloading with the very
+      // first request instead of after a fresh TLS handshake per rail.
+      { rel: "preconnect", href: "https://valiw.hakunaymatata.com", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://valiw.hakunaymatata.com" },
+      { rel: "preconnect", href: "https://api7.aoneroom.com", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://api7.aoneroom.com" },
+      { rel: "preconnect", href: "https://pbcdn.aoneroom.com", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://pbcdn.aoneroom.com" },
     ],
   }),
+
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -118,10 +139,29 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    void registerDownloadWorker().catch(() => {});
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <LiveSync />
+      <RouteProgress />
+      <AuthProvider>
+        <ActivityTracker />
+        <SubscriptionProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <ReferralTracker />
+        </SubscriptionProvider>
+      </AuthProvider>
+      <DevToolsGuard />
+      <WhatsAppPrompt />
+      <DownloadTour />
+      <Toaster position="top-center" richColors />
+      <DownloadFloat />
     </QueryClientProvider>
+
+
   );
 }
