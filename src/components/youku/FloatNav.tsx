@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
+import { ChevronDown, ChevronRight, Crown, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
 import { PROVIDERS } from "@/lib/providers/types";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Icon3D } from "@/components/Icon3D";
@@ -32,6 +33,7 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
   const { openSubscribe } = useSubscription();
   const [authOpen, setAuthOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [providersOpen, setProviders] = useState(false);
   const staffQ = useQuery({
     queryKey: ["my-staff-role", user?.id],
     enabled: !!user && !isAdmin,
@@ -98,11 +100,12 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
             to="/p/$provider"
             params={{ provider: p.id }}
             title={p.blurb}
-            className={`${pill(pathname === `/p/${p.id}` || pathname.startsWith(`/p/${p.id}/`))} shrink-0 whitespace-nowrap`}
+            className={`${pill(pathname === `/p/${p.id}` || pathname.startsWith(`/p/${p.id}/`))} hidden shrink-0 whitespace-nowrap lg:grid`}
           >
             {p.name}
           </Link>
         ))}
+        {/* Mobile-only provider dropdown so the header still fits Subscribe/Login */}
         {onSearch && (
           <button
             type="button"
@@ -113,6 +116,63 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
             <Icon3D name="search" className="size-4" />
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setProviders((v) => !v)}
+          className="grid h-8 shrink-0 place-items-center rounded-full bg-foreground/12 px-3 text-[12px] font-black uppercase tracking-wide text-foreground transition hover:bg-foreground/25 lg:hidden"
+        >
+          <span className="flex items-center gap-1">
+            Providers
+            <ChevronDown className={`size-3.5 transition-transform ${providersOpen ? "rotate-180" : ""}`} />
+          </span>
+        </button>
+        {providersOpen &&
+          createPortal(
+            <>
+              <button
+                type="button"
+                aria-label="Close providers"
+                className="fixed inset-0 z-40 lg:hidden"
+                onClick={() => setProviders(false)}
+              />
+              <div className="fixed right-2 top-14 z-50 w-56 overflow-hidden rounded-xl bg-card/95 p-1.5 shadow-2xl ring-1 ring-border backdrop-blur-xl lg:hidden">
+              <p className="px-2.5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Browse by provider
+              </p>
+              {[
+                { to: "/", label: "Moviebox" },
+                { to: "/luo", label: "Luo" },
+                { to: "/luganda", label: "Luganda" },
+                { to: "/teso", label: "Teso" },
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setProviders(false)}
+                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] text-foreground hover:bg-foreground/10"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <p className="px-2.5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Sources
+              </p>
+              {PROVIDERS.map((p) => (
+                <Link
+                  key={p.id}
+                  to="/p/$provider"
+                  params={{ provider: p.id }}
+                  onClick={() => setProviders(false)}
+                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] text-foreground hover:bg-foreground/10"
+                >
+                  <span>{p.name}</span>
+                  <ChevronRight className="size-3.5 text-muted-foreground" />
+                </Link>
+              ))}
+              </div>
+            </>,
+            document.body,
+          )}
         <button
           type="button"
           onClick={openSubscribe}

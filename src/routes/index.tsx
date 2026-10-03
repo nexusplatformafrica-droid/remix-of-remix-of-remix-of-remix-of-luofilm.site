@@ -184,7 +184,7 @@ function HomePage() {
           {!!data && !slides.length && <div className="h-16" />}
 
           {!!slides.length && (
-            <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-40px)/2)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-260px)/3)] lg:px-8">
+            <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-12px)/1.9)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-260px)/3)] lg:px-8">
               {/* The hero never stops: cards in animated gradient holders pass
                   slowly across the page forever — 2 across on mobile, 3 bigger
                   ones on desktop. Hovering pauses the pass. */}
