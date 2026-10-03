@@ -23,6 +23,6 @@ export const saveHeroSlides = (slides: HeroSlide[]) => saveSetting(HERO_KEY, sli
 
 export function heroHref(s: HeroSlide): string {
   if (s.kind === "api") return `/watch/${s.refId}`;
-  if (s.kind === "upload") return `/${s.language === "luganda" ? "luganda" : "luo"}/${s.refId}`;
+  if (s.kind === "upload") return `/${s.language === "luganda" ? "luganda" : s.language === "teso" ? "teso" : "luo"}/${s.refId}`;
   return s.link || "#";
 }

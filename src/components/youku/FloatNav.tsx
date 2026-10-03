@@ -76,6 +76,12 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
         >
           Luganda
         </Link>
+        <Link
+          to="/teso"
+          className={`${pill(pathname.startsWith("/teso"))} hidden lg:grid`}
+        >
+          Teso
+        </Link>
         {PROVIDERS.map((p) => (
           <Link
             key={p.id}

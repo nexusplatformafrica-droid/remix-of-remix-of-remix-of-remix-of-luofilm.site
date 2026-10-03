@@ -109,7 +109,7 @@ export function LuoLibrary({ language, vj = "" }: { language: LuoLanguage; vj?: 
                 return (
                   <Link
                     key={item.id}
-                    to={language === "luo" ? "/luo/$id" : "/luganda/$id"}
+                    to={language === "luo" ? "/luo/$id" : language === "teso" ? "/teso/$id" : "/luganda/$id"}
                     params={{ id: item.id }}
                     {...(idx === 0 ? { "data-tour": "first-poster" } : {})}
                     className="group block"

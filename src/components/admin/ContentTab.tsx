@@ -336,6 +336,7 @@ export function ContentTab({ userId }: { userId?: string }) {
                 <select className={softField} value={form.language} onChange={(e) => setForm({ ...form, language: e.target.value })}>
                   <option value="luo">Luo</option>
                   <option value="luganda">Luganda</option>
+                  <option value="teso">Teso</option>
                 </select>
                 <input className={softField} placeholder="VJ" value={form.vj} onChange={(e) => setForm({ ...form, vj: e.target.value })} />
                 <input className={softField} placeholder="Genre" value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} />

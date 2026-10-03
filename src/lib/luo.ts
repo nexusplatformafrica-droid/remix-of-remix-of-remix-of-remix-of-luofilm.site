@@ -9,7 +9,7 @@ import { fdb, nowIso, type Row } from "@/lib/fdb";
 export const MEDIA_TABLE = "media";
 export const EPISODES_TABLE = "episodes";
 
-export type LuoLanguage = "luo" | "luganda";
+export type LuoLanguage = "luo" | "luganda" | "teso";
 
 export type LuoTitle = {
   id: string;
@@ -214,4 +214,5 @@ export async function deleteLuoEpisode(id: string) {
 export const LANG_LABEL: Record<LuoLanguage, string> = {
   luo: "LUO",
   luganda: "LUGANDA",
+  teso: "TESO",
 };

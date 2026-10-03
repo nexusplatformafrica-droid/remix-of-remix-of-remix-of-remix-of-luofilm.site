@@ -125,6 +125,9 @@ async function fetchSubtitles(captions: CatalogDownloadInput["captions"]) {
 
 export class DownloadAborted extends Error {}
 
+/** In-page range fetching is blocked (e.g. the host redirected to a CDN without CORS). */
+export class NeedsNativeDownload extends Error {}
+
 const sleep = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     const t = window.setTimeout(resolve, ms);
@@ -149,6 +152,7 @@ async function withRetry<T>(fn: () => Promise<T>, signal?: AbortSignal, onWait?:
       return await fn();
     } catch (error) {
       if (signal?.aborted || error instanceof DownloadAborted) throw new DownloadAborted("paused");
+      if (error instanceof NeedsNativeDownload) throw error;
       attempt += 1;
       if (attempt > 30) throw error;
       onWait?.();
@@ -265,11 +269,21 @@ export async function downloadCatalogFile(
       // so an expired link is refreshed automatically on retry.
       return withRetry(async () => {
         inflight.set(start, 0);
-        const response = await fetch(input.url, {
-          credentials: "include",
-          signal: signal ?? null,
-          headers: { Range: `bytes=${start}-${end}`, "Accept-Encoding": "identity" },
-        });
+        let response: Response;
+        try {
+          response = await fetch(input.url, {
+            credentials: "include",
+            signal: signal ?? null,
+            headers: { Range: `bytes=${start}-${end}`, "Accept-Encoding": "identity" },
+          });
+        } catch (error) {
+          if (signal?.aborted) throw error;
+          if (navigator.onLine && downloaded === 0) throw new NeedsNativeDownload("blocked");
+          throw error;
+        }
+        if (response.status !== 206 && downloaded === 0 && (response.type === "opaqueredirect" || response.redirected || response.status >= 500)) {
+          throw new NeedsNativeDownload("blocked");
+        }
         if (response.status !== 206) {
           throw new Error(`The movie server did not accept resume range ${start}-${end}.`);
         }

@@ -130,7 +130,11 @@ export async function registerDownloadWorker() {
 
 /** Hand a same-origin file to the browser's own download manager via the worker. */
 export async function startWorkerDownload(src: string, filename: string, knownSize?: number | null) {
-  const worker = await registerDownloadWorker();
+  // Service workers are blocked in some embedded frames/private modes; never hang on them.
+  const worker = await Promise.race([
+    registerDownloadWorker().catch(() => null),
+    new Promise<null>((r) => setTimeout(() => r(null), 2500)),
+  ]);
   const params = new URLSearchParams({ src, name: filename });
   if (knownSize && knownSize > 0) params.set("size", String(knownSize));
   const anchor = document.createElement("a");

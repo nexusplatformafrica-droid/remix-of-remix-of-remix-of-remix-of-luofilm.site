@@ -13,7 +13,7 @@ export type LuoPublicTitle = {
   title: string;
   description: string | null;
   poster: string | null;
-  language: "luo" | "luganda";
+  language: "luo" | "luganda" | "teso";
   updatedAt: string | null;
   vj: string | null;
   videoUrl: string | null;
@@ -60,7 +60,7 @@ function mapDoc(doc: { name?: string; fields?: Record<string, RestValue>; update
       imageUrl(val(f['poster'])) ??
       imageUrl(val(f['thumbnail'])) ??
       imageUrl(val(f['backdrop_url'])),
-    language: lang.startsWith("lug") ? "luganda" : "luo",
+    language: lang.startsWith("lug") ? "luganda" : lang.startsWith("tes") ? "teso" : "luo",
     updatedAt: str(doc.updateTime),
     vj: str(val(f['vj'])),
     videoUrl: imageUrl(val(f['video_url'])) ?? imageUrl(val(f['url'])),
