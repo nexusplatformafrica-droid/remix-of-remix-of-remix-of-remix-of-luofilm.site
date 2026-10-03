@@ -80,18 +80,54 @@ export const providerDetails = createServerFn({ method: "GET" })
   });
 
 /** Turn a source token into fresh direct file links. */
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+
+/** Returns the URL if it answers with real media bytes, null otherwise. */
+async function liveMediaUrl(url: string): Promise<string | null> {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 9000);
+  try {
+    const res = await fetch(url, { headers: { range: "bytes=0-1", "user-agent": UA }, signal: ctl.signal });
+    const type = (res.headers.get("content-type") ?? "").toLowerCase();
+    await res.body?.cancel().catch(() => {});
+    if ((res.status === 200 || res.status === 206) && !/text\/|json|xml|mpegurl/.test(type)) return url;
+    // Landing pages like ".../dl.php?link=<real file>" wrap the real file link.
+    const inner = new URL(res.url || url).searchParams.get("link");
+    if (inner?.startsWith("https://") && inner !== url) return liveMediaUrl(inner);
+    return null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/** Puts mirrors that really return the file first and drops dead ones. */
+async function liveMirrors(list: PMirror[]): Promise<PMirror[]> {
+  const checked = await Promise.all(
+    list.slice(0, 8).map(async (m) => {
+      const url = await liveMediaUrl(m.url);
+      return url ? { ...m, url } : null;
+    }),
+  );
+  const ok = checked.filter((m): m is PMirror => m !== null);
+  if (!ok.length) throw new Error("This source's files are offline right now — try another quality.");
+  return ok;
+}
+
 export const resolveSource = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ token: z.string().min(3).max(2000) }).parse(d))
   .handler(async ({ data }): Promise<PMirror[]> => {
     const [kind, ...rest] = data.token.split("|");
     if (kind === "4k") {
       const { fkResolve } = await import("./providers/fourkhdhub.server");
-      return fkResolve(rest.join("|"));
+      return liveMirrors(await fkResolve(rest.join("|")));
     }
     if (kind === "dr") {
       const { drResolve } = await import("./providers/others.server");
-      return drResolve(rest[0] ?? "", rest[1] ?? "");
+      return liveMirrors(await drResolve(rest[0] ?? "", rest[1] ?? ""));
     }
-    if (kind === "url") return [{ label: "Direct", url: rest.join("|") }];
+    if (kind === "url") return liveMirrors([{ label: "Direct", url: rest.join("|") }]);
     throw new Error("Unknown source");
   });
