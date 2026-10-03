@@ -156,7 +156,7 @@ function MediaInput({
   );
 }
 
-export function ContentTab({ userId }: { userId?: string }) {
+export function ContentTab({ userId, restricted = false }: { userId?: string; restricted?: boolean }) {
   const qc = useQueryClient();
   const [sub, setSub] = useState<Sub>("movies");
   const [form, setForm] = useState<Form | null>(null);
@@ -256,7 +256,7 @@ export function ContentTab({ userId }: { userId?: string }) {
       </div>
 
       {sub === "episodes" ? (
-        <EpisodesManager series={series} />
+        <EpisodesManager series={series} restricted={restricted} />
       ) : (
         <Panel
           title={`${sub === "movies" ? "Uploaded movies" : "Uploaded series"} · ${list.length}`}
@@ -270,7 +270,9 @@ export function ContentTab({ userId }: { userId?: string }) {
             </button>
           }
         >
-          {titles.isLoading ? (
+          {restricted ? (
+            <Empty>You can upload here. Uploaded titles and their links are visible only to the main admin.</Empty>
+          ) : titles.isLoading ? (
             <Empty>Loading…</Empty>
           ) : list.length === 0 ? (
             <Empty>Nothing uploaded yet.</Empty>
@@ -382,7 +384,7 @@ export function ContentTab({ userId }: { userId?: string }) {
   );
 }
 
-function EpisodesManager({ series }: { series: LuoTitle[] }) {
+function EpisodesManager({ series, restricted = false }: { series: LuoTitle[]; restricted?: boolean }) {
   const qc = useQueryClient();
   const [titleId, setTitleId] = useState("");
   const active = titleId || series[0]?.id || "";
@@ -464,7 +466,9 @@ function EpisodesManager({ series }: { series: LuoTitle[] }) {
       </Panel>
 
       <Panel title={`Episodes · ${eps.data?.length ?? 0}`}>
-        {!active ? (
+        {restricted ? (
+          <Empty>Episodes you add are saved. Only the main admin can view or manage episode links.</Empty>
+        ) : !active ? (
           <Empty>Add a series first.</Empty>
         ) : (eps.data?.length ?? 0) === 0 ? (
           <Empty>No episodes yet.</Empty>

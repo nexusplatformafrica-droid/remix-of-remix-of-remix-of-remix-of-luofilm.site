@@ -8,10 +8,10 @@ import { money, seriesByDay, timeAgo } from "@/lib/admin";
 import { walletBalance } from "@/lib/relworx";
 import { Empty, Panel, SoftArea, Stat } from "./ui";
 
-export type AdminTab = "overview" | "users" | "content" | "hero" | "notify" | "wallet" | "settings";
+export type AdminTab = "overview" | "users" | "content" | "hero" | "notify" | "wallet" | "settings" | "team";
 
 async function loadOverview() {
-  const [profiles, subs, tx, withdrawals, titles, episodes, activities] = await Promise.all([
+  const [profiles, subs, tx, withdrawals, titles, episodes, activities, roles] = await Promise.all([
     supabase.from("profiles").select("id, created_at, display_name, email, phone, last_seen").order("created_at", { ascending: false }),
     supabase.from("luo_subscriptions").select("*").order("created_at", { ascending: false }),
     supabase.from("luo_transactions").select("*").order("created_at", { ascending: false }),
@@ -19,6 +19,7 @@ async function loadOverview() {
     supabase.from("media").select("*"),
     supabase.from("episodes").select("*"),
     supabase.from("luo_activities").select("*").order("created_at", { ascending: false }),
+    supabase.from("user_roles").select("*"),
   ]);
   return {
     profiles: profiles.data ?? [],
@@ -28,12 +29,16 @@ async function loadOverview() {
     titles: titles.data ?? [],
     episodes: episodes.data ?? [],
     activities: activities.data ?? [],
+    roles: roles.data ?? [],
   };
 }
 
-export function Overview({ go }: { go: (t: AdminTab) => void }) {
+export function Overview({ go, limited = false }: { go: (t: AdminTab) => void; limited?: boolean }) {
   const q = useQuery({ queryKey: ["admin-overview"], queryFn: loadOverview });
-  const d = q.data;
+  const raw = q.data;
+  // Team members never see the main admin's own activity.
+  const adminIds = new Set((raw?.roles ?? []).filter((r) => r.role === "admin").map((r) => String(r.user_id)));
+  const d = raw && limited ? { ...raw, activities: raw.activities.filter((a) => !adminIds.has(String(a.user_id))) } : raw;
   const qc = useQueryClient();
   const [showAll, setShowAll] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -56,6 +61,7 @@ export function Overview({ go }: { go: (t: AdminTab) => void }) {
   const wallet = useQuery({
     queryKey: ["relworx-balance"],
     queryFn: () => walletBalance(),
+    enabled: !limited,
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
@@ -106,7 +112,7 @@ export function Overview({ go }: { go: (t: AdminTab) => void }) {
           icon={<Crown className="size-4" />}
           onClick={() => go("users")}
         />
-        <Stat
+        {!limited && <Stat
           label="Wallet balance"
           value={
             wallet.isLoading
@@ -123,7 +129,7 @@ export function Overview({ go }: { go: (t: AdminTab) => void }) {
           tone="mint"
           icon={<Wallet className="size-4" />}
           onClick={() => go("wallet")}
-        />
+        />}
         <Stat
           label="Library"
           value={`${d?.titles.length ?? 0}`}
@@ -135,9 +141,9 @@ export function Overview({ go }: { go: (t: AdminTab) => void }) {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-        <Panel title="Revenue · last 14 days" action={<span className="text-[12px] opacity-60">{money(revenue)} lifetime</span>}>
+        {!limited && <Panel title="Revenue · last 14 days" action={<span className="text-[12px] opacity-60">{money(revenue)} lifetime</span>}>
           <SoftArea data={revChart} prefix="UGX " color="oklch(0.72 0.15 40)" />
-        </Panel>
+        </Panel>}
         <Panel title="New users · last 14 days">
           <SoftArea data={userChart} color="oklch(0.6 0.15 300)" height={220} />
         </Panel>
@@ -158,14 +164,14 @@ export function Overview({ go }: { go: (t: AdminTab) => void }) {
               >
                 {showAll ? "Show less" : `View all (${d?.activities.length ?? 0})`}
               </button>
-              <button
+              {!limited && <button
                 type="button"
                 onClick={clearActivities}
                 disabled={clearing}
                 className="flex items-center gap-1 rounded-full bg-red-500/10 px-2.5 py-1 font-semibold text-red-600 ring-1 ring-red-500/20 transition hover:bg-red-500/20 disabled:opacity-50"
               >
                 <Trash2 className="size-3" /> {clearing ? "Deleting…" : "Delete all"}
-              </button>
+              </button>}
             </span>
           }
         >
@@ -199,7 +205,7 @@ export function Overview({ go }: { go: (t: AdminTab) => void }) {
               { t: "Upload a movie", i: Film, tab: "content" as AdminTab },
               { t: "Add episodes", i: Tv, tab: "content" as AdminTab },
               { t: "Users & subscriptions", i: Users, tab: "users" as AdminTab },
-              { t: "Withdraw money", i: Wallet, tab: "wallet" as AdminTab },
+              ...(limited ? [] : [{ t: "Withdraw money", i: Wallet, tab: "wallet" as AdminTab }]),
             ].map((s) => (
               <button
                 key={s.t}
