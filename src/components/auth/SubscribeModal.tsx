@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import QRCode from "qrcode";
 import {
   BadgeCheck,
   Ban,
@@ -146,6 +145,7 @@ export function SubscribeModal({
       });
       linkTx.current = tx;
       const url = `${window.location.origin}/pay/${tx.id}`;
+      const QRCode = (await import("qrcode")).default;
       setQr(await QRCode.toDataURL(url, { margin: 1, width: 240 }));
     } catch {
       setQr("");
