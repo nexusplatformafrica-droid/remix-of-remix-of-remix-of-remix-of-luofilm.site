@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
@@ -13,6 +13,9 @@ import { isAdultItem } from "@/lib/categories";
 import { getHome, getTrending, getSection } from "@/lib/catalog.functions";
 import { balanceTrending } from "@/lib/trending-filter";
 import { HOME_SECTIONS } from "@/lib/home-sections";
+import { heroHref, loadHeroSlides } from "@/lib/hero";
+
+type HeroCard = { id: string; title: string; image: string | null; watchId?: string | undefined; href: string; vj?: string | null | undefined; promo: boolean; meta: string };
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
@@ -75,7 +78,31 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const { data, refetch } = useQuery(homeQuery);
   const wideTrending = useQuery(trendingQuery);
-  const slides = data?.hero ?? [];
+  const autoHero = data?.hero ?? [];
+  // Admin-curated hero (API picks, uploaded VJ titles, promo banners) wins
+  // over the automatic hero whenever the admin has saved any slides.
+  const curated = useQuery({ queryKey: ["hero_slides"], queryFn: loadHeroSlides, staleTime: 60_000 });
+  const slides: HeroCard[] = curated.data?.length
+    ? curated.data.map((h) => ({
+        id: h.key,
+        title: h.title,
+        image: h.image,
+        watchId: h.kind === "api" ? h.refId : undefined,
+        href: heroHref(h),
+        vj: h.kind === "upload" ? h.vj : null,
+        promo: h.kind === "promo",
+        meta: h.subtitle ?? "",
+      }))
+    : autoHero.map((s) => ({
+        id: s.id,
+        title: s.title,
+        image: s.backdrop,
+        watchId: s.id,
+        href: `/watch/${s.id}`,
+        vj: null,
+        promo: false,
+        meta: [s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null].filter(Boolean).join(" · "),
+      }));
   // The hero never stops: the track repeats the cards and drifts left slowly
   // forever instead of jumping between fixed pages.
   const copies = Math.max(2, Math.ceil(6 / Math.max(slides.length, 1)));
@@ -84,7 +111,7 @@ function HomePage() {
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
   const degraded =
-    !!data && ((data as { degraded?: boolean }).degraded === true || slides.length === 0);
+    !!data && ((data as { degraded?: boolean }).degraded === true || autoHero.length === 0);
   useEffect(() => {
     if (!degraded) return;
     const t = setTimeout(() => void refetch(), 300);
@@ -178,15 +205,24 @@ function HomePage() {
                           className="w-[calc(var(--card-w)+8px)] shrink-0 px-1"
                         >
                           <div className="hero-ring rounded-2xl p-[2px]">
-                            <Link
-                              to="/watch/$id"
-                              params={{ id: s.id }}
+                            <HeroLink
+                              card={s}
                               tabIndex={c === 0 ? 0 : -1}
                               className="group relative block aspect-[16/9] overflow-hidden rounded-[calc(1rem-2px)] bg-card"
                             >
-                              {s.backdrop ? (
+                              {s.vj && (
+                                <span className="absolute left-2 top-2 z-10 rounded-md bg-primary px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-primary-foreground shadow sm:text-xs">
+                                  VJ {s.vj}
+                                </span>
+                              )}
+                              {s.promo && (
+                                <span className="absolute left-2 top-2 z-10 rounded-md bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase text-foreground backdrop-blur sm:text-xs">
+                                  Promo
+                                </span>
+                              )}
+                              {s.image ? (
                                 <img
-                                  src={s.backdrop}
+                                  src={s.image}
                                   alt={s.title}
                                   loading={c === 0 ? "eager" : "lazy"}
                                   fetchPriority={c === 0 && i === 0 ? "high" : "auto"}
@@ -206,15 +242,13 @@ function HomePage() {
                                 </h2>
                                 <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md transition-colors group-hover:bg-white/30 sm:px-2.5 sm:py-1.5 sm:text-xs">
                                   <Play className="size-3 fill-current sm:size-3.5" />
-                                  Play
+                                  {s.promo ? "Open" : "Play"}
                                 </span>
                                 <p className="hidden max-w-[240px] truncate text-[10px] text-white/85 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] sm:block">
-                                  {[s.year, s.genre, s.rating ? `IMDb ${s.rating}` : null]
-                                    .filter(Boolean)
-                                    .join(" · ")}
+                                  {s.meta}
                                 </p>
                               </div>
-                            </Link>
+                            </HeroLink>
                           </div>
                         </div>
                       ))}
@@ -265,5 +299,20 @@ function HomePage() {
       <ReferralBanner />
       <MobileNav />
     </div>
+  );
+}
+
+function HeroLink({ card, children, ...rest }: { card: HeroCard; children: ReactNode; tabIndex: number; className: string }) {
+  if (card.watchId)
+    return (
+      <Link to="/watch/$id" params={{ id: card.watchId }} {...rest}>
+        {children}
+      </Link>
+    );
+  const external = /^https?:\/\//.test(card.href);
+  return (
+    <a href={card.href} {...rest} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+      {children}
+    </a>
   );
 }

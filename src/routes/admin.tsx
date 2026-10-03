@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { LayoutDashboard, Users, Film, Wallet, Settings, ShieldCheck, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, Film, Wallet, Settings, ShieldCheck, MessageCircle, Sparkles } from "lucide-react";
 import { Sidebar } from "@/components/youku/Sidebar";
 import { TopBar } from "@/components/youku/TopBar";
 import { MobileNav } from "@/components/youku/MobileNav";
@@ -13,6 +13,7 @@ import { ContentTab } from "@/components/admin/ContentTab";
 import { NotifyTab } from "@/components/admin/NotifyTab";
 import { WalletTab } from "@/components/admin/WalletTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
+import { HeroTab } from "@/components/admin/HeroTab";
 import { SOFT_BG, goldBtn } from "@/components/admin/ui";
 
 export const Route = createFileRoute("/admin")({
@@ -37,6 +38,7 @@ const TABS: { k: AdminTab; t: string; i: typeof Users }[] = [
   { k: "overview", t: "Overview", i: LayoutDashboard },
   { k: "users", t: "Users", i: Users },
   { k: "content", t: "Content", i: Film },
+  { k: "hero", t: "Hero", i: Sparkles },
   { k: "notify", t: "Notify", i: MessageCircle },
   { k: "wallet", t: "Wallet", i: Wallet },
   { k: "settings", t: "Settings", i: Settings },
@@ -120,6 +122,7 @@ function AdminPage() {
                   {tab === "overview" && <Overview go={setTab} />}
                   {tab === "users" && <UsersTab />}
                   {tab === "content" && <ContentTab userId={user.id} />}
+                  {tab === "hero" && <HeroTab />}
                   {tab === "notify" && <NotifyTab />}
                   {tab === "wallet" && <WalletTab />}
                   {tab === "settings" && <SettingsTab />}
