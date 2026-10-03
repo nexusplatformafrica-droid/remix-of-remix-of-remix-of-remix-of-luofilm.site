@@ -94,6 +94,12 @@ export const Route = createFileRoute("/api/public/stream")({
           const value = upstream.headers.get(key);
           if (value) headers.set(key, value);
         }
+        // Generic binary types confuse players; label real video files properly.
+        const ct = (headers.get("content-type") ?? "").toLowerCase();
+        if (!ct || ct.includes("octet-stream")) {
+          const ext = (filename ?? parsed.pathname).toLowerCase().match(/\.(mkv|mp4|webm|m4v|avi|mov)$/)?.[1];
+          if (ext) headers.set("content-type", ext === "mkv" ? "video/x-matroska" : ext === "avi" ? "video/x-msvideo" : ext === "mov" ? "video/quicktime" : `video/${ext === "m4v" ? "mp4" : ext}`);
+        }
         headers.set("cache-control", "public, max-age=3600");
         headers.set("access-control-allow-origin", "*");
         if (filename) {

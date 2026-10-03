@@ -92,11 +92,28 @@ function ProviderPage() {
             {list.isPending ? (
               <GridSkeleton />
             ) : list.data?.items.length ? (
-              <div className={providerGrid}>
-                {list.data.items.map((item) => (
-                  <ProviderCard key={item.id} item={item} />
-                ))}
-              </div>
+              q ? (
+                <div className={providerGrid}>
+                  {list.data.items.map((item) => <ProviderCard key={item.id} item={item} />)}
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {([["Movies", "movie"], ["Series", "series"]] as const).map(([label, type]) => {
+                    const items = list.data!.items.filter((i) => i.type === type);
+                    if (!items.length) return null;
+                    return (
+                      <section key={type}>
+                        <h2 className="mb-3 flex items-baseline gap-2 text-lg font-black text-foreground">
+                          {label} <span className="text-xs font-bold text-muted-foreground">{items.length}</span>
+                        </h2>
+                        <div className={providerGrid}>
+                          {items.map((item) => <ProviderCard key={item.id} item={item} />)}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              )
             ) : (
               <div className="card-soft p-8 text-center text-sm text-muted-foreground">
                 {list.data?.error ? `${meta.name} is not reachable right now: ${list.data.error}` : "Nothing found."}
