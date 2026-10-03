@@ -97,7 +97,7 @@ function SearchPage() {
             appointmentDate: null,
             booked: null,
           } satisfies CatalogItem,
-          to: t.language === "luganda" ? "/luganda/$id" : "/luo/$id",
+          to: t.language === "luganda" ? "/luganda/$id" : t.language === "teso" ? "/teso/$id" : "/luo/$id",
           tag: {
             label: t.language === "luganda" ? "Luganda" : "Luo",
             className:

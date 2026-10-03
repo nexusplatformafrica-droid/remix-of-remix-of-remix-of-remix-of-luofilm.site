@@ -102,11 +102,11 @@ export function LuoWatch({ id, language }: { id: string; language: LuoLanguage }
         </div>
         <main className="px-3 pb-28 sm:px-4 lg:px-8 lg:pb-16">
           <Link
-            to={language === "luo" ? "/luo" : "/luganda"}
+            to={language === "luo" ? "/luo" : language === "teso" ? "/teso" : "/luganda"}
             className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Back to {language === "luo" ? "Luo" : "Luganda"}
+            Back to {language === "luo" ? "Luo" : language === "teso" ? "Teso" : "Luganda"}
           </Link>
 
           {title.isLoading ? (
@@ -146,7 +146,7 @@ export function LuoWatch({ id, language }: { id: string; language: LuoLanguage }
                   </span>
                   <span className="flex items-center gap-1 text-foreground">
                     <Star className="size-3.5 fill-current text-vip" />
-                    {language === "luo" ? "Luo" : "Luganda"}
+                    {language === "luo" ? "Luo" : language === "teso" ? "Teso" : "Luganda"}
                   </span>
                   {[data.vj ? `VJ ${data.vj}` : null, data.year, data.genre]
                     .filter(Boolean)
@@ -273,7 +273,7 @@ function RelatedGrid({ items, language }: { items: RelatedItem[]; language: LuoL
       {items.map((item) => (
         <Link
           key={item.id}
-          to={language === "luo" ? "/luo/$id" : "/luganda/$id"}
+          to={language === "luo" ? "/luo/$id" : language === "teso" ? "/teso/$id" : "/luganda/$id"}
           params={{ id: item.id }}
           className="block"
         >
