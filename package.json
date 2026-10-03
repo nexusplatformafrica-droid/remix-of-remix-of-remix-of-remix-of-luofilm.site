@@ -60,6 +60,7 @@
     "hls.js": "^1.7.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
+    "movi-player": "^0.4.1",
     "node-html-parser": "^9.0.4",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",

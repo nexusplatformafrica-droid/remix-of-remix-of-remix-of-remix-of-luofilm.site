@@ -52,6 +52,17 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
+    // A stale tab after an update can't fetch old page code — reload once.
+    const msg = String((error as Error)?.message ?? error);
+    if (/dynamically imported module|Importing a module script failed|Loading chunk/i.test(msg)) {
+      const k = "chunk-reload-at";
+      const last = Number(sessionStorage.getItem(k) ?? 0);
+      if (Date.now() - last > 15000) {
+        sessionStorage.setItem(k, String(Date.now()));
+        window.location.reload();
+        return;
+      }
+    }
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
