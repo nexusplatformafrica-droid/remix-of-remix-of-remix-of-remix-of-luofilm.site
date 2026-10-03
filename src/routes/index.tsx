@@ -10,6 +10,7 @@ import { RowSkeleton } from "@/components/youku/Skeletons";
 import { VjRail } from "@/components/youku/VjRail";
 import { ReferralBanner } from "@/components/youku/ReferralBanner";
 import { isAdultItem } from "@/lib/categories";
+import { ProviderTrending } from "@/components/providers/ProviderTrending";
 import { getHome, getTrending, getSection } from "@/lib/catalog.functions";
 import { balanceTrending } from "@/lib/trending-filter";
 import { HOME_SECTIONS } from "@/lib/home-sections";
@@ -265,6 +266,9 @@ function HomePage() {
               <Rail title="Trending now" items={trending} ranked priority />
             </div>
           )}
+          <div className="relative z-10 pl-3 sm:pl-4 lg:pl-8">
+            <ProviderTrending />
+          </div>
 
         </div>
 
