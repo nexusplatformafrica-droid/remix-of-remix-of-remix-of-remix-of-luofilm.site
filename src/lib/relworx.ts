@@ -48,25 +48,6 @@ export const isValidMsisdn = (v: string) => {
 };
 
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${paymentBackend()}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  const text = await res.text();
-  let payload: unknown;
-  try {
-    payload = JSON.parse(text);
-  } catch {
-    payload = { message: text };
-  }
-  if (!res.ok) {
-    const p = payload as { message?: string; error?: string };
-    throw new Error(p.message ?? p.error ?? `Payment service error (${res.status})`);
-  }
-  return payload as T;
-}
-
 export type DepositInput = {
   msisdn: string;
   amount: number;
@@ -76,31 +57,29 @@ export type DepositInput = {
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/** Mobile money via PawaPay (kept under the old name so screens stay unchanged). */
 export const relworx = {
-  health: () => call<any>("/health"),
-  validatePhone: (msisdn: string) =>
-    call<any>("/api/validate-phone", { method: "POST", body: JSON.stringify({ msisdn }) }),
-  deposit: (input: DepositInput) =>
-    call<any>("/api/deposit", {
-      method: "POST",
-      body: JSON.stringify({ currency: CURRENCY_CODE, ...input }),
-    }),
-  withdraw: (input: DepositInput) =>
-    call<any>("/api/withdraw", {
-      method: "POST",
-      body: JSON.stringify({ currency: CURRENCY_CODE, ...input }),
-    }),
-  balance: (currency = CURRENCY_CODE) =>
-    call<any>(`/api/wallet/balance?currency=${encodeURIComponent(currency)}`),
-  requestStatus: (internalReference: string) =>
-    call<any>(`/api/request-status?internal_reference=${encodeURIComponent(internalReference)}`),
-  transactions: () => call<any>("/api/transactions"),
-  detectPhone: (msisdn: string) =>
-    call<any>("/api/detect-phone", { method: "POST", body: JSON.stringify({ msisdn }) }),
-  supportedCountries: () => call<any>("/api/supported-countries"),
-  supportedCurrencies: () => call<any>("/api/supported-currencies"),
+  deposit: async (input: DepositInput): Promise<any> => {
+    const { pawaDeposit } = await import("./pawapay.functions");
+    const r = await pawaDeposit({
+      data: { phone: input.msisdn, amount: input.amount, currency: input.currency ?? CURRENCY_CODE, reference: input.reference, message: input.description },
+    });
+    if (!r.ok) throw new Error(r.message);
+    return r;
+  },
+  withdraw: async (input: DepositInput): Promise<any> => {
+    const { pawaPayout } = await import("./pawapay.functions");
+    const r = await pawaPayout({
+      data: { phone: input.msisdn, amount: input.amount, currency: input.currency ?? CURRENCY_CODE, reference: input.reference, message: input.description },
+    });
+    if (!r.ok) throw new Error(r.message);
+    return r;
+  },
+  requestStatus: async (id: string, kind: "deposits" | "payouts" = "deposits"): Promise<any> => {
+    const { pawaStatus } = await import("./pawapay.functions");
+    return pawaStatus({ data: { kind, id } });
+  },
 };
-
 
 const SUCCESS = /^(success|successful|completed|complete|paid)$/i;
 const FAILED = /^(failed|failure|cancelled|canceled|declined|error|rejected|expired)$/i;
@@ -151,24 +130,28 @@ const pickArray = (payload: any): any[] => {
   return [];
 };
 
-/** Transactions straight from the Relworx wallet (the money source of truth). */
+/** Mobile money transactions from the app ledger (PawaPay has no list endpoint). */
 export async function listRelworxTransactions(): Promise<RelworxTx[]> {
-  const rows = pickArray(await relworx.transactions());
-  return rows.map((r, i) => {
-    const raw = String(r?.status ?? r?.request_status ?? "pending");
-    const status = SUCCESS.test(raw) ? "success" : FAILED.test(raw) ? "failed" : raw.toLowerCase();
-    return {
-      id: String(r?.id ?? r?.internal_reference ?? r?.reference ?? `rw-${i}`),
-      reference: String(r?.reference ?? r?.customer_reference ?? "—"),
-      internal_reference: r?.internal_reference ? String(r.internal_reference) : null,
-      msisdn: r?.msisdn ? String(r.msisdn) : (r?.phone ? String(r.phone) : null),
-      amount: Number(r?.amount ?? r?.value ?? 0) || 0,
-      currency: String(r?.currency ?? CURRENCY_CODE),
-      status,
-      kind: String(r?.type ?? r?.kind ?? (Number(r?.amount) < 0 ? "withdraw" : "payment")),
-      created_at: String(r?.created_at ?? r?.date ?? r?.updated_at ?? new Date().toISOString()),
-    };
-  });
+  const { fdb } = await import("./fdb");
+  const { data } = await fdb.from("luo_transactions").select("*");
+  const rows = pickArray(data).filter((r) => r?.internal_reference && (r?.method === "mobile_money" || r?.kind === "withdraw"));
+  return rows
+    .map((r, i) => {
+      const raw = String(r?.status ?? "pending");
+      const status = SUCCESS.test(raw) ? "success" : FAILED.test(raw) ? "failed" : raw.toLowerCase();
+      return {
+        id: String(r?.id ?? `pp-${i}`),
+        reference: String(r?.reference ?? "—"),
+        internal_reference: r?.internal_reference ? String(r.internal_reference) : null,
+        msisdn: r?.msisdn ? String(r.msisdn) : null,
+        amount: Number(r?.amount ?? 0) || 0,
+        currency: String(r?.currency ?? CURRENCY_CODE),
+        status,
+        kind: String(r?.kind ?? "payment"),
+        created_at: String(r?.created_at ?? new Date().toISOString()),
+      };
+    })
+    .sort((x, y) => (x.created_at < y.created_at ? 1 : -1));
 }
 
 export type WithdrawResult = {
@@ -191,9 +174,9 @@ export async function sendWithdrawal(input: {
   currency?: string;
   description?: string;
 }): Promise<WithdrawResult> {
-  const target = input.currency
-    ? countryByCurrency(input.currency)
-    : (countryFromPhone(input.phone) ?? DEFAULT_COUNTRY);
+  const target =
+    countryFromPhone(input.phone) ??
+    (input.currency ? countryByCurrency(input.currency) : DEFAULT_COUNTRY);
   const msisdn = normalizeFor(input.phone, target);
   if (!isValidFor(msisdn, target))
     throw new Error(`Enter a valid ${target.name} mobile money number`);
@@ -216,7 +199,7 @@ export async function sendWithdrawal(input: {
   const internal = res?.internal_reference ?? res?.data?.internal_reference ?? null;
   if (!internal) {
     const first = readStatus(res);
-    if (first.status === "failed") throw new Error(first.message || "Relworx rejected the payout");
+    if (first.status === "failed") throw new Error(first.message || "The payout was rejected");
     return {
       reference,
       internal_reference: null,
@@ -232,7 +215,7 @@ export async function sendWithdrawal(input: {
   for (let i = 0; i < 10; i++) {
     await new Promise((r) => setTimeout(r, 3000));
     try {
-      last = readStatus(await relworx.requestStatus(String(internal)));
+      last = readStatus(await relworx.requestStatus(String(internal), "payouts"));
     } catch {
       continue;
     }
@@ -250,29 +233,38 @@ export async function sendWithdrawal(input: {
   };
 }
 
-/** Live Relworx wallet balance for a currency; null when unreachable. */
+export type CurrencyBalance = { currency: string; country: string; flag: string; balance: number | null };
+
+let cache: { at: number; list: { country: string; currency: string; balance: number }[] } | null = null;
+async function fetchBalances() {
+  if (cache && Date.now() - cache.at < 10_000) return cache.list;
+  const { pawaBalances } = await import("./pawapay.functions");
+  const r = await pawaBalances();
+  cache = { at: Date.now(), list: r.balances };
+  return r.balances;
+}
+
+/** Live PawaPay wallet balance for a currency (summed across countries); null when unreachable. */
 export async function walletBalance(currency = CURRENCY_CODE): Promise<number | null> {
   try {
-    const res = await relworx.balance(currency);
-    const raw =
-      res?.balance ?? res?.data?.balance ?? res?.wallet?.balance ?? res?.available_balance;
-    const value = Number(raw);
-    return Number.isFinite(value) ? value : null;
+    const list = (await fetchBalances()).filter((b) => b.currency === currency);
+    if (!list.length) return null;
+    return list.reduce((t, b) => t + (Number.isFinite(b.balance) ? b.balance : 0), 0);
   } catch {
     return null;
   }
 }
 
-export type CurrencyBalance = { currency: string; country: string; flag: string; balance: number | null };
-
-/** Live balance for every supported country, fetched in parallel. */
+/** Live balance for every supported country wallet. */
 export async function allWalletBalances(): Promise<CurrencyBalance[]> {
-  return Promise.all(
-    COUNTRIES.map(async (c) => ({
-      currency: c.currency,
-      country: c.name,
-      flag: c.flag,
-      balance: await walletBalance(c.currency),
-    })),
-  );
+  let list: { country: string; currency: string; balance: number }[] = [];
+  try {
+    list = await fetchBalances();
+  } catch {
+    /* offline */
+  }
+  return COUNTRIES.map((c) => {
+    const hit = list.find((b) => b.country === c.iso3 && b.currency === c.currency);
+    return { currency: c.currency, country: c.name, flag: c.flag, balance: hit ? hit.balance : null };
+  });
 }
