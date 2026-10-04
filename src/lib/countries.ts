@@ -1,6 +1,6 @@
 import { currencyForCountry } from "./country-currency";
 /**
- * Supported payment countries for the Relworx backend.
+ * Supported mobile money countries (PawaPay).
  *
  * Plan prices are authored in UGX; every other country sees the same plan
  * converted into its own currency, rounded to a friendly amount and clamped
@@ -9,6 +9,8 @@ import { currencyForCountry } from "./country-currency";
 
 export type CountryInfo = {
   code: string;
+  /** ISO 3166-1 alpha-3 code used by PawaPay. */
+  iso3?: string;
   name: string;
   short: string;
   flag: string;
@@ -26,76 +28,19 @@ export type CountryInfo = {
 };
 
 export const COUNTRIES: CountryInfo[] = [
-  {
-    code: "UG",
-    name: "Uganda",
-    short: "UG",
-    flag: "🇺🇬",
-    currency: "UGX",
-    rate: 1,
-    step: 500,
-    dial: "256",
-    localLength: 9,
-    min: 500,
-    max: 5_000_000,
-    providers: ["MTN MoMo", "Airtel Money"],
-  },
-  {
-    code: "KE",
-    name: "Kenya",
-    short: "KE",
-    flag: "🇰🇪",
-    currency: "KES",
-    rate: 0.0351,
-    step: 10,
-    dial: "254",
-    localLength: 9,
-    min: 10,
-    max: 70_000,
-    providers: ["M-Pesa", "Airtel Money"],
-  },
-  {
-    code: "TZ",
-    name: "Tanzania",
-    short: "TZ",
-    flag: "🇹🇿",
-    currency: "TZS",
-    rate: 0.7,
-    step: 500,
-    dial: "255",
-    localLength: 9,
-    min: 500,
-    max: 5_000_000,
-    providers: ["Vodacom", "Airtel", "Tigo", "Halotel"],
-  },
-  {
-    code: "RW",
-    name: "Rwanda",
-    short: "RW",
-    flag: "🇷🇼",
-    currency: "RWF",
-    rate: 0.378,
-    step: 100,
-    dial: "250",
-    localLength: 9,
-    min: 100,
-    max: 5_000_000,
-    providers: ["MTN MoMo", "Airtel Money"],
-  },
-  {
-    code: "CD",
-    name: "DR Congo",
-    short: "CD",
-    flag: "🇨🇩",
-    currency: "CDF",
-    rate: 0.77,
-    step: 500,
-    dial: "243",
-    localLength: 9,
-    min: 500,
-    max: 5_000_000,
-    providers: ["Airtel Money", "Orange Money", "M-Pesa", "Afrimoney"],
-  },
+  { code: "UG", iso3: "UGA", name: "Uganda", short: "UG", flag: "🇺🇬", currency: "UGX", rate: 1, step: 500, dial: "256", localLength: 9, min: 500, max: 5000000, providers: ["MTN MoMo", "Airtel Money"] },
+  { code: "KE", iso3: "KEN", name: "Kenya", short: "KE", flag: "🇰🇪", currency: "KES", rate: 0.0351, step: 10, dial: "254", localLength: 9, min: 10, max: 250000, providers: ["M-Pesa"] },
+  { code: "RW", iso3: "RWA", name: "Rwanda", short: "RW", flag: "🇷🇼", currency: "RWF", rate: 0.378, step: 100, dial: "250", localLength: 9, min: 100, max: 5000000, providers: ["MTN MoMo", "Airtel Money"] },
+  { code: "CD", iso3: "COD", name: "DR Congo", short: "CD", flag: "🇨🇩", currency: "CDF", rate: 0.77, step: 500, dial: "243", localLength: 9, min: 500, max: 5000000, providers: ["Vodacom M-Pesa", "Airtel Money", "Orange Money"] },
+  { code: "ZM", iso3: "ZMB", name: "Zambia", short: "ZM", flag: "🇿🇲", currency: "ZMW", rate: 0.0072, step: 1, dial: "260", localLength: 9, min: 1, max: 100000, providers: ["MTN MoMo", "Airtel Money", "Zamtel"] },
+  { code: "MZ", iso3: "MOZ", name: "Mozambique", short: "MZ", flag: "🇲🇿", currency: "MZN", rate: 0.0173, step: 10, dial: "258", localLength: 9, min: 10, max: 500000, providers: ["M-Pesa", "e-Mola"] },
+  { code: "CM", iso3: "CMR", name: "Cameroon", short: "CM", flag: "🇨🇲", currency: "XAF", rate: 0.16, step: 100, dial: "237", localLength: 9, min: 100, max: 2000000, providers: ["MTN MoMo", "Orange Money"] },
+  { code: "GA", iso3: "GAB", name: "Gabon", short: "GA", flag: "🇬🇦", currency: "XAF", rate: 0.16, step: 100, dial: "241", localLength: 8, min: 100, max: 2000000, providers: ["Airtel Money"] },
+  { code: "CG", iso3: "COG", name: "Republic of the Congo", short: "CG", flag: "🇨🇬", currency: "XAF", rate: 0.16, step: 100, dial: "242", localLength: 9, min: 100, max: 2000000, providers: ["MTN MoMo", "Airtel Money"] },
+  { code: "BJ", iso3: "BEN", name: "Benin", short: "BJ", flag: "🇧🇯", currency: "XOF", rate: 0.16, step: 100, dial: "229", localLength: 10, min: 100, max: 2000000, providers: ["MTN MoMo", "Moov Money"] },
+  { code: "CI", iso3: "CIV", name: "Côte d'Ivoire", short: "CI", flag: "🇨🇮", currency: "XOF", rate: 0.16, step: 100, dial: "225", localLength: 10, min: 100, max: 2000000, providers: ["MTN MoMo", "Orange Money", "Wave"] },
+  { code: "SN", iso3: "SEN", name: "Senegal", short: "SN", flag: "🇸🇳", currency: "XOF", rate: 0.16, step: 100, dial: "221", localLength: 9, min: 100, max: 2000000, providers: ["Orange Money", "Free Money", "Wave"] },
+  { code: "SL", iso3: "SLE", name: "Sierra Leone", short: "SL", flag: "🇸🇱", currency: "SLE", rate: 0.0061, step: 1, dial: "232", localLength: 8, min: 1, max: 100000, providers: ["Orange Money", "Africell Money"] },
 ];
 
 export const DEFAULT_COUNTRY = COUNTRIES[0]!;

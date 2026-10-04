@@ -208,7 +208,7 @@ export function WalletTab() {
         title="Balances by country"
         action={
           <span className="text-[11px] opacity-60">
-            {balances.isFetching ? "refreshing…" : "live from Relworx"}
+            {balances.isFetching ? "refreshing…" : "live from PawaPay"}
           </span>
         }
       >
@@ -220,7 +220,7 @@ export function WalletTab() {
             balance: null as number | null,
           }))).map((b) => (
             <button
-              key={b.currency}
+              key={`${b.country}-${b.currency}`}
               type="button"
               onClick={() => {
                 setForm((f) => ({ ...f, currency: b.currency }));
@@ -351,7 +351,7 @@ export function WalletTab() {
                 ["Plan", openTx.planName],
                 ["Kind", openTx.kind],
                 ["Reference", openTx.reference],
-                ["Relworx reference", openTx.internal_reference ?? "—"],
+                ["PawaPay reference", openTx.internal_reference ?? "—"],
                 ["Status", openTx.status],
                 ["Date", fullDate(openTx.created_at)],
               ].map(([k, v]) => (

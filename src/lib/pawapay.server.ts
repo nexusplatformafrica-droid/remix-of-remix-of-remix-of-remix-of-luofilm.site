@@ -1,0 +1,107 @@
+/** PawaPay Merchant API v2 — server only. Token stays in PAWAPAY_API_TOKEN. */
+function base() {
+  const env = (process.env["PAWAPAY_ENV"] ?? "production").toLowerCase();
+  return env === "sandbox" ? "https://api.sandbox.pawapay.io" : "https://api.pawapay.io";
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+async function call(path: string, init?: RequestInit): Promise<any> {
+  const token = process.env["PAWAPAY_API_TOKEN"];
+  if (!token) throw new Error("Mobile money is not configured yet (PAWAPAY_API_TOKEN missing).");
+  const res = await fetch(`${base()}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  const text = await res.text();
+  let body: any;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    body = { message: text };
+  }
+  if (!res.ok) {
+    const msg = body?.failureReason?.failureMessage ?? body?.message ?? `PawaPay error (${res.status})`;
+    throw new Error(String(msg));
+  }
+  return body;
+}
+
+export async function predictProvider(phone: string) {
+  const r = await call("/v2/predict-provider", {
+    method: "POST",
+    body: JSON.stringify({ phoneNumber: phone.replace(/[^0-9]/g, "") }),
+  });
+  if (!r?.provider) throw new Error("Could not recognise this mobile money number.");
+  return { provider: String(r.provider), phoneNumber: String(r.phoneNumber), country: String(r.country ?? "") };
+}
+
+const cleanMessage = (s: string) => {
+  const t = (s || "LUOFILM").replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22);
+  return t.length >= 4 ? t : "LUOFILM";
+};
+const amountStr = (n: number) => String(Math.round(Number(n)));
+
+function reject(r: any) {
+  if (r?.status === "REJECTED")
+    throw new Error(String(r?.failureReason?.failureMessage ?? "Payment was rejected"));
+}
+
+export async function deposit(input: { phone: string; amount: number; currency: string; reference: string; message?: string }) {
+  const p = await predictProvider(input.phone);
+  const depositId = crypto.randomUUID();
+  const r = await call("/v2/deposits", {
+    method: "POST",
+    body: JSON.stringify({
+      depositId,
+      amount: amountStr(input.amount),
+      currency: input.currency,
+      payer: { type: "MMO", accountDetails: { phoneNumber: p.phoneNumber, provider: p.provider } },
+      clientReferenceId: input.reference.slice(0, 50),
+      customerMessage: cleanMessage(input.message ?? "LUOFILM membership"),
+    }),
+  });
+  reject(r);
+  return { internal_reference: depositId, provider: p.provider, authorizationUrl: r?.authorizationUrl ?? null };
+}
+
+export async function payout(input: { phone: string; amount: number; currency: string; reference: string; message?: string }) {
+  const p = await predictProvider(input.phone);
+  const payoutId = crypto.randomUUID();
+  const r = await call("/v2/payouts", {
+    method: "POST",
+    body: JSON.stringify({
+      payoutId,
+      amount: amountStr(input.amount),
+      currency: input.currency,
+      recipient: { type: "MMO", accountDetails: { phoneNumber: p.phoneNumber, provider: p.provider } },
+      clientReferenceId: input.reference.slice(0, 50),
+      customerMessage: cleanMessage(input.message ?? "LUOFILM payout"),
+    }),
+  });
+  reject(r);
+  return { internal_reference: payoutId, provider: p.provider };
+}
+
+export async function status(kind: "deposits" | "payouts", id: string) {
+  const r = await call(`/v2/${kind}/${encodeURIComponent(id)}`);
+  if (r?.status === "NOT_FOUND") return { status: "pending", message: "Waiting for confirmation", authorizationUrl: null };
+  const d = r?.data ?? {};
+  const s = String(d.status ?? "").toUpperCase();
+  if (s === "COMPLETED") return { status: "success", message: "Payment received", authorizationUrl: null };
+  if (s === "FAILED")
+    return { status: "failed", message: String(d.failureReason?.failureMessage ?? "Payment failed"), authorizationUrl: null };
+  return { status: "pending", message: "Approve the prompt on your phone", authorizationUrl: d.authorizationUrl ?? null };
+}
+
+export async function balances() {
+  const r = await call("/v2/wallet-balances");
+  return (Array.isArray(r?.balances) ? r.balances : []).map((b: any) => ({
+    country: String(b.country ?? ""),
+    currency: String(b.currency ?? ""),
+    balance: Number(b.balance),
+  }));
+}
