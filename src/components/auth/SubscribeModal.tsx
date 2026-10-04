@@ -346,6 +346,7 @@ export function SubscribeModal({
                       setTier(k);
                       setSelected(TIERS[k].plans[0]!.id);
                       setPhase("idle");
+                      setPaypalTx(null);
                     }}
                     className={`rounded-xl px-3 py-2 text-left transition ${
                       on ? "bg-white shadow-[0_6px_18px_-10px_rgba(0,0,0,0.4)]" : "opacity-60 hover:opacity-90"
@@ -373,6 +374,7 @@ export function SubscribeModal({
                     onClick={() => {
                       setSelected(p.id);
                       setPhase("idle");
+                      setPaypalTx(null);
                     }}
                     className={`relative min-w-0 rounded-xl px-1 pb-2 pt-5 text-center transition sm:rounded-2xl sm:px-3 sm:pb-4 sm:pt-6 ${
                       on
