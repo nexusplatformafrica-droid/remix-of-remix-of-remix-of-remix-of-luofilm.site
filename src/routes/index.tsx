@@ -79,7 +79,22 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const { data, refetch } = useQuery(homeQuery);
   const wideTrending = useQuery(trendingQuery);
-  const autoHero = data?.hero ?? [];
+  // On some hosts the upstream hero list comes back empty; fall back to
+  // trending / first rail titles that have artwork so the slider never vanishes.
+  const autoHero = (() => {
+    const h = data?.hero ?? [];
+    if (h.length) return h;
+    const pool = [
+      ...(wideTrending.data ?? []),
+      ...(data?.trending ?? []),
+      ...((data?.rows ?? []).flatMap((r) => r.items ?? [])),
+    ];
+    const seen = new Set<string>();
+    return pool
+      .filter((i) => (i.backdrop || i.poster) && !seen.has(i.id) && seen.add(i.id))
+      .slice(0, 10)
+      .map((i) => ({ ...i, backdrop: i.backdrop ?? i.poster }));
+  })();
   // Admin-curated hero (API picks, uploaded VJ titles, promo banners) wins
   // over the automatic hero whenever the admin has saved any slides.
   const curated = useQuery({ queryKey: ["hero_slides"], queryFn: loadHeroSlides, staleTime: 60_000 });
