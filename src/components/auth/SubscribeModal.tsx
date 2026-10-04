@@ -603,13 +603,32 @@ export function SubscribeModal({
                     />
                     {country.name} mobile money number
                   </label>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    inputMode="tel"
-                    placeholder={`+${country.dial} …`}
-                    className="mt-1 h-10 w-full rounded-2xl bg-white px-4 text-sm outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-[oklch(0.82_0.1_65)] sm:h-11"
-                  />
+                  <div className="mt-1 flex h-10 w-full items-center gap-2 rounded-2xl bg-white pl-3 pr-4 ring-1 ring-black/10 focus-within:ring-2 focus-within:ring-[oklch(0.82_0.1_65)] sm:h-11">
+                    <img
+                      src={flagUrl(country)}
+                      alt={country.name}
+                      className="h-[14px] w-[21px] shrink-0 rounded-[2px] object-cover ring-1 ring-black/10"
+                    />
+                    <span className="shrink-0 text-sm font-semibold">+{country.dial}</span>
+                    <input
+                      value={(() => {
+                        let d = phone.replace(/[^0-9]/g, "");
+                        if (d.startsWith(country.dial) && d.length > country.localLength) d = d.slice(country.dial.length);
+                        return d;
+                      })()}
+                      onChange={(e) => {
+                        let d = e.target.value.replace(/[^0-9]/g, "");
+                        if (d.startsWith("0")) d = d.slice(1);
+                        setPhone(d.slice(0, country.localLength));
+                      }}
+                      inputMode="tel"
+                      placeholder={phoneFormat(country).replace(`+${country.dial} `, "")}
+                      className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    />
+                  </div>
+                  <p className="mt-1 text-[10.5px] opacity-60">
+                    Format: {phoneFormat(country)} ({country.localLength} digits after +{country.dial})
+                  </p>
                 </div>
               )}
 
