@@ -211,6 +211,13 @@ export function SubscribeModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, user?.id, method, phase, paypalTx, plan.id, country.currency, localPrice]);
 
+  /** Card: load Whop's embedded checkout as soon as Card is selected. */
+  useEffect(() => {
+    if (!open || !user || method !== "card" || phase !== "idle") return;
+    void payCard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.id, method, phase, plan.id, country.currency, localPrice]);
+
   /** One-second poll so paying on a second device also completes here. */
   useEffect(() => {
     if (!open) return;
@@ -651,7 +658,10 @@ export function SubscribeModal({
                   </div>
                 </Suspense>
               )}
-              {method !== "paypal" && !(method === "card" && phase === "card") && <button
+              {method === "card" && phase === "waiting" && !cardSession && (
+                <Loader2 className="mx-auto size-5 animate-spin opacity-60" />
+              )}
+              {method !== "paypal" && (method !== "card" || phase === "failed") && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
