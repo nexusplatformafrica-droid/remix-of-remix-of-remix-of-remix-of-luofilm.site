@@ -331,7 +331,7 @@ export async function startPayPal(tx: Row) {
     .from("luo_transactions")
     .update({ internal_reference: res.orderId, method: "paypal", used_at: nowIso() })
     .eq("id", String(tx.id));
-  return res.url;
+  return { url: res.url, orderId: res.orderId, currency: res.currency };
 }
 
 /** Polled while PayPal is open; captures and activates once PayPal confirms. */
