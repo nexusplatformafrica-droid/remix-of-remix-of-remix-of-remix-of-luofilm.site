@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { startPayPal, type Row } from "@/lib/payments";
+import { startPayPal } from "@/lib/payments";
+import type { Row } from "@/lib/fdb";
 
 const CLIENT_ID =
   "BAA1V2BeV9eEaiwruLcISfdK1zxmx4PMVhKGFzdThPHBHHtMWH6DXBcnxaIpHu1smiJ_Xz39y27jT5-bwg";
