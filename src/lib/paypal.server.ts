@@ -145,5 +145,5 @@ export async function payPalOrderState(orderId: string, txId: string): Promise<P
     return { state: "paid", captureId: capture.id, message: "Payment confirmed" };
   }
   if (res.data.status === "VOIDED") return { state: "failed", captureId: null, message: "PayPal payment was cancelled." };
-  return { state: "pending", captureId: null, message: "Complete the payment in the PayPal tab" };
+  return { state: "pending", captureId: null, message: "Complete the payment in the PayPal window" };
 }
