@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Plus, Search, Trash2, UploadCloud } from "lucide-react";
-import { searchTitles, getTrending } from "@/lib/catalog.functions";
+import { searchTitles, getTrending, getHome } from "@/lib/catalog.functions";
 import { listAllLuoTitles } from "@/lib/luo";
 import { uploadMedia } from "@/lib/admin";
 import { loadHeroSlides, saveHeroSlides, type HeroSlide } from "@/lib/hero";
@@ -110,11 +110,24 @@ function PickGrid({ items, onPick }: { items: { id: string; title: string; image
 function ApiPicker({ onAdd }: { onAdd: (s: HeroSlide) => void }) {
   const search = useServerFn(searchTitles);
   const trendingFn = useServerFn(getTrending);
+  const homeFn = useServerFn(getHome);
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   const res = useQuery({
     queryKey: ["hero-api", term],
-    queryFn: async () => (term ? search({ data: { q: term } }) : ((await trendingFn()) as Awaited<ReturnType<typeof search>>)),
+    retry: 2,
+    queryFn: async () => {
+      if (term) return search({ data: { q: term } });
+      // Trending can come back empty; fall back to the home catalog so the
+      // admin always has titles to pick from.
+      const t = await trendingFn().catch(() => []);
+      if (t.length) return t;
+      const h = await homeFn().catch(() => null);
+      const pool = [...(h?.hero ?? []), ...(h?.trending ?? []), ...(h?.rows ?? []).flatMap((r) => r.items ?? [])];
+      const seen = new Set<string>();
+      const out = pool.filter((i) => !seen.has(i.id) && seen.add(i.id));
+      return out.length ? out : search({ data: { q: "2025" } });
+    },
   });
   const items = (res.data ?? []).slice(0, 24);
   return (
