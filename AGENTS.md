@@ -22,3 +22,4 @@
 - Provider `resolveSource` probes every mirror and returns only ones that answer with real media bytes (unwrapping `?link=` landing pages); why: hosts list dead mirrors first, which produced "file wasn't available" downloads.
 - PayPal orders and captures run server-side behind `paypal.functions.ts`, while the v6 Web SDK renders PayPal's real button and modal approval UI; the public client ID lives in code and `PAYPAL_CLIENT_SECRET` stays server-only.
 - Card payments use Whop's express "whop-pay" button (floating Whop window) with a floating embedded checkout as fallback, never a new tab or inline full checkout; why: user wants a one-click button that opens Whop's overlay on the page.
+- Mobile money (deposits, payouts, wallet balances) runs through PawaPay v2 in `src/lib/pawapay.server.ts` behind `pawapay.functions.ts`; token in `PAWAPAY_API_TOKEN`, `PAWAPAY_ENV=sandbox` switches hosts. Why: API token must never reach the browser.
