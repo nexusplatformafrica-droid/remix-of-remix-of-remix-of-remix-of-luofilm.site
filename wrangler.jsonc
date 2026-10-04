@@ -15,6 +15,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "luofilm",
   "main": "dist/server/index.mjs",
+  // Build before deploying, so `npx wrangler deploy` works even when the
+  // Cloudflare build command is left empty.
+  "build": { "command": "npm run build" },
   "compatibility_date": "2026-09-03",
   "compatibility_flags": ["nodejs_compat"],
   "no_bundle": true,

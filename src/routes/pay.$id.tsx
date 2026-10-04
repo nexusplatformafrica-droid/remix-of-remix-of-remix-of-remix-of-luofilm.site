@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
-import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, startPayPal, syncPayPalPayment } from "@/lib/payments";
+import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
 import type { Row } from "@/lib/fdb";
+import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { lazy, Suspense } from "react";
 const WhopEmbed = lazy(() => import("@/components/auth/WhopEmbed"));
 
@@ -86,20 +87,6 @@ function PayPage() {
     const timer = window.setInterval(run, 3000);
     return () => window.clearInterval(timer);
   }, [paypalBack, phase, id]);
-
-  const openPayPal = async () => {
-    if (!tx || started.current) return;
-    started.current = true;
-    setPhase("waiting");
-    setStatus("Opening PayPal…");
-    try {
-      window.location.href = await startPayPal(tx);
-    } catch (err) {
-      started.current = false;
-      setPhase("failed");
-      setStatus(err instanceof Error ? err.message : "Could not start PayPal.");
-    }
-  };
 
   // Mobile money polling.
   useEffect(() => {
@@ -253,16 +240,19 @@ function PayPage() {
               </button>
             )}
 
-            {phase !== "done" && method === "paypal" && !paypalBack && (
-              <button
-                type="button"
-                onClick={() => void openPayPal()}
-                disabled={phase === "waiting"}
-                className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[15px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60"
-              >
-                <Wallet className="size-4" />
-                {phase === "waiting" ? "Opening PayPal…" : "Pay with PayPal"}
-              </button>
+            {phase !== "done" && method === "paypal" && !paypalBack && tx && (
+              <PayPalButtons
+                tx={tx}
+                onApproved={() => {
+                  setPaypalBack(true);
+                  setPhase("waiting");
+                  setStatus("Confirming your PayPal payment…");
+                }}
+                onError={(m) => {
+                  setPhase("failed");
+                  setStatus(m);
+                }}
+              />
             )}
 
             {phase !== "done" && isWallet && !whopUrl && (

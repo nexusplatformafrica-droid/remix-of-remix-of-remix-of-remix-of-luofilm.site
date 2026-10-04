@@ -27,13 +27,14 @@ export const startPayPalCheckout = createServerFn({ method: "POST" })
         returnUrl: `${origin}/pay/${data.txId}?paypal=return`,
         cancelUrl: `${origin}/pay/${data.txId}?paypal=cancel`,
       });
-      return { ok: true as const, orderId: r.orderId, url: r.approveUrl, message: "" };
+      return { ok: true as const, orderId: r.orderId, url: r.approveUrl, currency: r.charged.currency, message: "" };
     } catch (err) {
       console.error("[paypal] checkout failed", err);
       return {
         ok: false as const,
         orderId: "",
         url: "",
+        currency: "USD",
         message: err instanceof Error ? err.message : "PayPal could not start.",
       };
     }

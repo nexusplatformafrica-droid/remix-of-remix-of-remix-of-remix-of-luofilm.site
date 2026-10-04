@@ -26,7 +26,6 @@ import {
   type PayPlan,
   startCardCheckout,
   syncCardPayment,
-  startPayPal,
   syncPayPalPayment,
 } from "@/lib/payments";
 import {
@@ -42,6 +41,7 @@ import {
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { detectVisitorGeo } from "@/lib/geo.functions";
+import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
 
 const TAGS: Record<string, string> = { daily: "Try it", "s-monthly": "Popular" };
@@ -78,6 +78,7 @@ export function SubscribeModal({
   const [tier, setTier] = useState<"vip" | "svip">("vip");
   const [selected, setSelected] = useState("monthly");
   const [phase, setPhase] = useState<Phase>("idle");
+  const [paypalTx, setPaypalTx] = useState<Row | null>(null);
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState("");
   const [qr, setQr] = useState("");
@@ -242,6 +243,19 @@ export function SubscribeModal({
     if (!user) return;
     setPhase("waiting");
     setStatus("Preparing the secure payment page…");
+    if (method === "paypal") {
+      try {
+        const tx = await createPaymentIntent({ userId: user.id, plan, method, currency: country.currency, amount: localPrice });
+        setPaypalTx(tx);
+        setPhase("card");
+        setStatus("Tap the PayPal button below to pay — you stay on this page.");
+      } catch (err) {
+        setPhase("failed");
+        setStatus(err instanceof Error ? err.message : "Could not start PayPal.");
+        setFailOpen(true);
+      }
+      return;
+    }
     // Open the tab right away so pop-up blockers allow it.
     const win = window.open("about:blank", "_blank");
     try {
@@ -253,7 +267,7 @@ export function SubscribeModal({
         amount: localPrice,
       });
       liveTx.current = tx;
-      const url = method === "paypal" ? await startPayPal(tx) : await startCardCheckout(tx);
+      const url = await startCardCheckout(tx);
       if (win) win.location.href = url;
       else window.open(url, "_blank");
       setWhopUrl(url);
@@ -466,6 +480,21 @@ export function SubscribeModal({
                     ? `This amount is below the ${country.currency} minimum (${country.min.toLocaleString()}). Pick a longer plan.`
                     : `This amount is above the ${country.currency} maximum (${country.max.toLocaleString()}). Pick a shorter plan.`}
                 </p>
+              )}
+
+              {phase === "card" && method === "paypal" && paypalTx && (
+                <PayPalButtons
+                  tx={paypalTx}
+                  onApproved={() => {
+                    liveTx.current = paypalTx;
+                    setPhase("waiting");
+                    setStatus("Confirming your PayPal payment…");
+                  }}
+                  onError={(m) => {
+                    setPhase("failed");
+                    setStatus(m);
+                  }}
+                />
               )}
 
               {phase === "card" && whopUrl && (
