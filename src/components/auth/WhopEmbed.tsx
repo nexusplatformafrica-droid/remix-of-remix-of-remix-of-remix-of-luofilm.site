@@ -1,6 +1,14 @@
-import { WhopCheckoutEmbed } from "@whop/checkout/react";
+import { useState } from "react";
+import { WhopCheckoutEmbed, WhopExpressCheckoutButton } from "@whop/checkout/react";
+import { Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-/** Whop's own embedded checkout: card, Apple Pay and Google Pay buttons come from Whop. */
+/**
+ * Whop's real one-click pay button. Clicking it opens Whop's floating payment
+ * window on top of the page (no new tab). If Whop can't show its express
+ * button for this buyer, a plain card button opens Whop's checkout in a
+ * floating window instead.
+ */
 export default function WhopEmbed({
   sessionId,
   onDone,
@@ -8,13 +16,57 @@ export default function WhopEmbed({
   sessionId: string;
   onDone?: () => void;
 }) {
+  const [noExpress, setNoExpress] = useState(false);
+  const [open, setOpen] = useState(false);
+  const returnUrl = typeof window !== "undefined" ? window.location.href : "https://luofilm.site";
+
   return (
-    <WhopCheckoutEmbed
-      sessionId={sessionId}
-      theme="light"
-      skipRedirect
-      onComplete={() => onDone?.()}
-      fallback={<div className="p-6 text-center text-xs opacity-60">Loading secure payment…</div>}
-    />
+    <>
+      {!noExpress && (
+        <WhopExpressCheckoutButton
+          checkoutConfigurationId={sessionId}
+          methods={["whop-pay"]}
+          returnUrl={returnUrl}
+          theme="light"
+          skipRedirect
+          onComplete={() => onDone?.()}
+          onExpressMethodResolved={({ rendered }) => {
+            if (rendered === "none") setNoExpress(true);
+          }}
+          fallback={
+            <div className="grid h-11 place-items-center">
+              <Loader2 className="size-5 animate-spin opacity-60" />
+            </div>
+          }
+        />
+      )}
+      {noExpress && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex h-11 w-full items-center justify-center rounded-full bg-foreground text-[14px] font-bold text-background transition hover:opacity-90"
+        >
+          Pay with card · Whop
+        </button>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-[420px] overflow-y-auto p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Pay with card</DialogTitle>
+          </DialogHeader>
+          <WhopCheckoutEmbed
+            sessionId={sessionId}
+            theme="light"
+            skipRedirect
+            returnUrl={returnUrl}
+            onComplete={() => {
+              setOpen(false);
+              onDone?.();
+            }}
+            fallback={<div className="p-6 text-center text-xs opacity-60">Loading secure payment…</div>}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
