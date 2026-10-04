@@ -562,7 +562,7 @@ export function SubscribeModal({
                 </div>
               )}
 
-              {qr && (phase === "idle" || (phase === "card" && method === "paypal")) && (
+              {qr && (phase === "idle" || phase === "card") && (
                 <>
                   <div className="mt-4 hidden rounded-2xl bg-white/80 p-3 text-center ring-1 ring-black/5 md:block">
                     <img src={qr} alt="Scan to pay on your phone" className="mx-auto size-[150px]" />
@@ -647,7 +647,7 @@ export function SubscribeModal({
               )}
               {method === "card" && cardSession && phase === "card" && (
                 <Suspense fallback={<Loader2 className="mx-auto size-5 animate-spin opacity-60" />}>
-                  <div className="overflow-hidden rounded-xl">
+                  <div>
                     <WhopEmbed
                       sessionId={cardSession}
                       onDone={() => {
