@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+
+const WhopEmbed = lazy(() => import("@/components/auth/WhopEmbed"));
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -25,6 +27,7 @@ import {
   syncTransaction,
   type PayPlan,
   startCardCheckout,
+  startCardSession,
   syncCardPayment,
   syncPayPalPayment,
 } from "@/lib/payments";
@@ -85,6 +88,7 @@ export function SubscribeModal({
   const [showScan, setShowScan] = useState(false);
   const [method, setMethod] = useState<ModalMethod>("mobile_money");
   const [whopUrl, setWhopUrl] = useState("");
+  const [cardSession, setCardSession] = useState("");
   const geoQ = useQuery({
     queryKey: ["visitor-geo"],
     queryFn: () => detectVisitorGeo(),
@@ -164,10 +168,15 @@ export function SubscribeModal({
   }, [open, phase, mintLink]);
 
   useEffect(() => {
+    if (phase === "idle") setCardSession("");
+  }, [phase]);
+
+  useEffect(() => {
     if (!open) {
       setPhase("idle");
       setStatus("");
       setWhopUrl("");
+      setCardSession("");
       setPaypalTx(null);
       liveTx.current = null;
     }
@@ -286,7 +295,23 @@ export function SubscribeModal({
       }
       return;
     }
-    // Open the tab right away so pop-up blockers allow it.
+    if (method === "card") {
+      // Card uses Whop's embedded standard checkout right here — no new tab.
+      try {
+        const tx = await createPaymentIntent({ userId: user.id, plan, method, currency: country.currency, amount: localPrice });
+        liveTx.current = tx;
+        const s = await startCardSession(tx);
+        setCardSession(s.sessionId);
+        setPhase("card");
+        setStatus("Pay securely below — powered by Whop.");
+      } catch (err) {
+        setPhase("failed");
+        setStatus(err instanceof Error ? err.message : "Could not start the card payment.");
+        setFailOpen(true);
+      }
+      return;
+    }
+    // Apple Pay / Google Pay: open the tab right away so pop-up blockers allow it.
     const win = window.open("about:blank", "_blank");
     try {
       const tx = await createPaymentIntent({
@@ -515,22 +540,7 @@ export function SubscribeModal({
                 </p>
               )}
 
-              {method === "paypal" && paypalTx && phase !== "done" && (
-                <PayPalButtons
-                  tx={paypalTx}
-                  onApproved={() => {
-                    liveTx.current = paypalTx;
-                    setPhase("waiting");
-                    setStatus("Confirming your PayPal payment…");
-                  }}
-                  onError={(m) => {
-                    setPhase("failed");
-                    setStatus(m);
-                  }}
-                />
-              )}
-
-              {phase === "card" && whopUrl && (
+              {phase === "card" && whopUrl && method !== "card" && (
                 <div className="mt-3 rounded-2xl bg-white/80 p-4 text-center ring-1 ring-black/10">
                   <Loader2 className="mx-auto size-5 animate-spin opacity-60" />
                   <p className="mt-2 text-[12px] font-semibold">Waiting for your payment…</p>
@@ -545,7 +555,7 @@ export function SubscribeModal({
                 </div>
               )}
 
-              {phase === "idle" && qr && method === "mobile_money" && (
+              {qr && (phase === "idle" || (phase === "card" && method === "paypal")) && (
                 <>
                   <div className="mt-4 hidden rounded-2xl bg-white/80 p-3 text-center ring-1 ring-black/5 md:block">
                     <img src={qr} alt="Scan to pay on your phone" className="mx-auto size-[150px]" />
@@ -614,7 +624,34 @@ export function SubscribeModal({
 
 
             <div className="mt-3 sm:mt-6">
-              {method !== "paypal" && <button
+              {method === "paypal" && paypalTx && phase !== "done" && (
+                <PayPalButtons
+                  tx={paypalTx}
+                  onApproved={() => {
+                    liveTx.current = paypalTx;
+                    setPhase("waiting");
+                    setStatus("Confirming your PayPal payment…");
+                  }}
+                  onError={(m) => {
+                    setPhase("failed");
+                    setStatus(m);
+                  }}
+                />
+              )}
+              {method === "card" && cardSession && phase === "card" && (
+                <Suspense fallback={<Loader2 className="mx-auto size-5 animate-spin opacity-60" />}>
+                  <div className="overflow-hidden rounded-xl">
+                    <WhopEmbed
+                      sessionId={cardSession}
+                      onDone={() => {
+                        setPhase("waiting");
+                        setStatus("Confirming your card payment…");
+                      }}
+                    />
+                  </div>
+                </Suspense>
+              )}
+              {method !== "paypal" && !(method === "card" && phase === "card") && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {

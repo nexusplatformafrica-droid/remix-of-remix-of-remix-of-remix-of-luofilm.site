@@ -119,9 +119,9 @@ export function PayPalButtons({
   }, [tx.id]);
 
   return (
-    <div className="relative mt-4 rounded-2xl bg-card p-3 shadow-lg ring-1 ring-border">
+    <div className="relative">
       {(loading || starting) && (
-        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-2xl bg-card/80">
+        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
           <Loader2 className="size-5 animate-spin opacity-60" />
         </div>
       )}
