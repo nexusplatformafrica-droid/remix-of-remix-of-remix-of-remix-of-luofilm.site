@@ -50,7 +50,7 @@ function reject(r: any) {
     throw new Error(String(r?.failureReason?.failureMessage ?? "Payment was rejected"));
 }
 
-export async function deposit(input: { phone: string; amount: number; currency: string; reference: string; message?: string }) {
+export async function deposit(input: { phone: string; amount: number; currency: string; reference: string; message?: string | undefined }) {
   const p = await predictProvider(input.phone);
   const depositId = crypto.randomUUID();
   const r = await call("/v2/deposits", {
@@ -68,7 +68,7 @@ export async function deposit(input: { phone: string; amount: number; currency: 
   return { internal_reference: depositId, provider: p.provider, authorizationUrl: r?.authorizationUrl ?? null };
 }
 
-export async function payout(input: { phone: string; amount: number; currency: string; reference: string; message?: string }) {
+export async function payout(input: { phone: string; amount: number; currency: string; reference: string; message?: string | undefined }) {
   const p = await predictProvider(input.phone);
   const payoutId = crypto.randomUUID();
   const r = await call("/v2/payouts", {

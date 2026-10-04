@@ -247,9 +247,9 @@ async function fetchBalances() {
 /** Live PawaPay wallet balance for a currency (summed across countries); null when unreachable. */
 export async function walletBalance(currency = CURRENCY_CODE): Promise<number | null> {
   try {
-    const list = (await fetchBalances()).filter((b) => b.currency === currency);
+    const list = (await fetchBalances()).filter((b: { currency: string }) => b.currency === currency);
     if (!list.length) return null;
-    return list.reduce((t, b) => t + (Number.isFinite(b.balance) ? b.balance : 0), 0);
+    return list.reduce((t: number, b: { balance: number }) => t + (Number.isFinite(b.balance) ? b.balance : 0), 0);
   } catch {
     return null;
   }
