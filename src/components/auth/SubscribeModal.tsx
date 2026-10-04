@@ -515,22 +515,7 @@ export function SubscribeModal({
                 </p>
               )}
 
-              {method === "paypal" && paypalTx && phase !== "done" && (
-                <PayPalButtons
-                  tx={paypalTx}
-                  onApproved={() => {
-                    liveTx.current = paypalTx;
-                    setPhase("waiting");
-                    setStatus("Confirming your PayPal payment…");
-                  }}
-                  onError={(m) => {
-                    setPhase("failed");
-                    setStatus(m);
-                  }}
-                />
-              )}
-
-              {phase === "card" && whopUrl && (
+              {phase === "card" && whopUrl && method !== "card" && (
                 <div className="mt-3 rounded-2xl bg-white/80 p-4 text-center ring-1 ring-black/10">
                   <Loader2 className="mx-auto size-5 animate-spin opacity-60" />
                   <p className="mt-2 text-[12px] font-semibold">Waiting for your payment…</p>
@@ -545,7 +530,7 @@ export function SubscribeModal({
                 </div>
               )}
 
-              {phase === "idle" && qr && method === "mobile_money" && (
+              {qr && (phase === "idle" || (phase === "card" && method === "paypal")) && (
                 <>
                   <div className="mt-4 hidden rounded-2xl bg-white/80 p-3 text-center ring-1 ring-black/5 md:block">
                     <img src={qr} alt="Scan to pay on your phone" className="mx-auto size-[150px]" />
@@ -614,7 +599,34 @@ export function SubscribeModal({
 
 
             <div className="mt-3 sm:mt-6">
-              {method !== "paypal" && <button
+              {method === "paypal" && paypalTx && phase !== "done" && (
+                <PayPalButtons
+                  tx={paypalTx}
+                  onApproved={() => {
+                    liveTx.current = paypalTx;
+                    setPhase("waiting");
+                    setStatus("Confirming your PayPal payment…");
+                  }}
+                  onError={(m) => {
+                    setPhase("failed");
+                    setStatus(m);
+                  }}
+                />
+              )}
+              {method === "card" && cardSession && phase === "card" && (
+                <Suspense fallback={<Loader2 className="mx-auto size-5 animate-spin opacity-60" />}>
+                  <div className="overflow-hidden rounded-xl">
+                    <WhopEmbed
+                      sessionId={cardSession}
+                      onDone={() => {
+                        setPhase("waiting");
+                        setStatus("Confirming your card payment…");
+                      }}
+                    />
+                  </div>
+                </Suspense>
+              )}
+              {method !== "paypal" && !(method === "card" && phase === "card") && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
