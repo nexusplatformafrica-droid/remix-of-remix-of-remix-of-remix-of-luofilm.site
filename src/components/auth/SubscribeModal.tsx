@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+
+const WhopEmbed = lazy(() => import("@/components/auth/WhopEmbed"));
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -25,6 +27,7 @@ import {
   syncTransaction,
   type PayPlan,
   startCardCheckout,
+  startCardSession,
   syncCardPayment,
   syncPayPalPayment,
 } from "@/lib/payments";
@@ -85,6 +88,7 @@ export function SubscribeModal({
   const [showScan, setShowScan] = useState(false);
   const [method, setMethod] = useState<ModalMethod>("mobile_money");
   const [whopUrl, setWhopUrl] = useState("");
+  const [cardSession, setCardSession] = useState("");
   const geoQ = useQuery({
     queryKey: ["visitor-geo"],
     queryFn: () => detectVisitorGeo(),
@@ -164,10 +168,15 @@ export function SubscribeModal({
   }, [open, phase, mintLink]);
 
   useEffect(() => {
+    if (phase === "idle") setCardSession("");
+  }, [phase]);
+
+  useEffect(() => {
     if (!open) {
       setPhase("idle");
       setStatus("");
       setWhopUrl("");
+      setCardSession("");
       setPaypalTx(null);
       liveTx.current = null;
     }
@@ -286,7 +295,23 @@ export function SubscribeModal({
       }
       return;
     }
-    // Open the tab right away so pop-up blockers allow it.
+    if (method === "card") {
+      // Card uses Whop's embedded standard checkout right here — no new tab.
+      try {
+        const tx = await createPaymentIntent({ userId: user.id, plan, method, currency: country.currency, amount: localPrice });
+        liveTx.current = tx;
+        const s = await startCardSession(tx);
+        setCardSession(s.sessionId);
+        setPhase("card");
+        setStatus("Pay securely below — powered by Whop.");
+      } catch (err) {
+        setPhase("failed");
+        setStatus(err instanceof Error ? err.message : "Could not start the card payment.");
+        setFailOpen(true);
+      }
+      return;
+    }
+    // Apple Pay / Google Pay: open the tab right away so pop-up blockers allow it.
     const win = window.open("about:blank", "_blank");
     try {
       const tx = await createPaymentIntent({
