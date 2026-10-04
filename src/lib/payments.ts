@@ -347,7 +347,7 @@ export async function syncPayPalPayment(txId: string): Promise<SyncResult> {
     await fdb.from("luo_transactions").update({ status: "failed", note: res.message }).eq("id", txId);
     return { status: "failed", message: res.message };
   }
-  if (!res || res.paid !== true || !res.captureId) return { status: "pending", message: res?.message ?? "Complete the payment in the PayPal tab" };
+  if (!res || res.paid !== true || !res.captureId) return { status: "pending", message: res?.message ?? "Complete the payment in the PayPal window" };
   await fdb
     .from("luo_transactions")
     .update({ status: "completed", completed_at: nowIso(), note: `PayPal payment ${res.captureId}` })

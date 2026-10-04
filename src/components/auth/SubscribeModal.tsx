@@ -168,9 +168,39 @@ export function SubscribeModal({
       setPhase("idle");
       setStatus("");
       setWhopUrl("");
+      setPaypalTx(null);
       liveTx.current = null;
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !user || method !== "paypal" || phase !== "idle" || paypalTx) return;
+    let cancelled = false;
+    setStatus("Loading the secure PayPal button…");
+    void createPaymentIntent({
+      userId: user.id,
+      plan,
+      method: "paypal",
+      currency: country.currency,
+      amount: localPrice,
+    })
+      .then((tx) => {
+        if (cancelled) return;
+        setPaypalTx(tx);
+        setPhase("card");
+        setStatus("Pay securely with the PayPal button below.");
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setPhase("failed");
+        setStatus(err instanceof Error ? err.message : "Could not start PayPal.");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Create one pending transaction for the selected PayPal plan.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.id, method, phase, paypalTx, plan.id, country.currency, localPrice]);
 
   /** One-second poll so paying on a second device also completes here. */
   useEffect(() => {
@@ -316,6 +346,7 @@ export function SubscribeModal({
                       setTier(k);
                       setSelected(TIERS[k].plans[0]!.id);
                       setPhase("idle");
+                      setPaypalTx(null);
                     }}
                     className={`rounded-xl px-3 py-2 text-left transition ${
                       on ? "bg-white shadow-[0_6px_18px_-10px_rgba(0,0,0,0.4)]" : "opacity-60 hover:opacity-90"
@@ -343,6 +374,7 @@ export function SubscribeModal({
                     onClick={() => {
                       setSelected(p.id);
                       setPhase("idle");
+                      setPaypalTx(null);
                     }}
                     className={`relative min-w-0 rounded-xl px-1 pb-2 pt-5 text-center transition sm:rounded-2xl sm:px-3 sm:pb-4 sm:pt-6 ${
                       on
@@ -394,6 +426,7 @@ export function SubscribeModal({
                         setMethod(m.id);
                         setPhase("idle");
                         setStatus("");
+                        setPaypalTx(null);
                       }}
                       className={`flex h-[52px] flex-col items-center justify-center gap-1 rounded-xl bg-white px-1.5 transition ${
                         on
@@ -482,7 +515,7 @@ export function SubscribeModal({
                 </p>
               )}
 
-              {phase === "card" && method === "paypal" && paypalTx && (
+              {method === "paypal" && paypalTx && phase !== "done" && (
                 <PayPalButtons
                   tx={paypalTx}
                   onApproved={() => {
@@ -581,7 +614,7 @@ export function SubscribeModal({
 
 
             <div className="mt-3 sm:mt-6">
-              <button
+              {method !== "paypal" && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
@@ -606,7 +639,7 @@ export function SubscribeModal({
                           : method === "mobile_money"
                             ? "Continue to Pay"
                             : `Pay with ${METHODS.find((m) => m.id === method)?.label}`}
-              </button>
+              </button>}
               <p className="mt-2 text-center text-[9.5px] opacity-55 sm:mt-3 sm:text-[10px]">
                 By continuing you agree to the Membership Agreement.
               </p>

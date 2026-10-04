@@ -20,4 +20,4 @@
 - Packages that break the server runtime (e.g. `qrcode`/pngjs) must be dynamically imported inside browser-only handlers; why: one static import crashed every hosted page with "This page didn't load".
 - Download/probe fetches and the download service worker use `credentials: "same-origin"`, never `"include"`; why: media CDNs answer `Access-Control-Allow-Origin: *`, which browsers reject for credentialed cross-origin redirects.
 - Provider `resolveSource` probes every mirror and returns only ones that answer with real media bytes (unwrapping `?link=` landing pages); why: hosts list dead mirrors first, which produced "file wasn't available" downloads.
-- PayPal checkout runs server-side (`src/lib/paypal.server.ts` behind `paypal.functions.ts`); the public client ID lives in code, the secret is read from `PAYPAL_CLIENT_SECRET` only on the server; why: a secret in code would ship in the repo/bundle.
+- PayPal orders and captures run server-side behind `paypal.functions.ts`, while the v6 Web SDK renders PayPal's real button and modal approval UI; the public client ID lives in code and `PAYPAL_CLIENT_SECRET` stays server-only.
