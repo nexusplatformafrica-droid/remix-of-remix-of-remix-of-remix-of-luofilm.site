@@ -1,4 +1,5 @@
-import { usePawaPredict } from "@/hooks/usePawaPredict";
+import { useMomoNetwork } from "@/hooks/usePawaPredict";
+import { NetworkPicker } from "@/components/auth/NetworkPicker";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
@@ -51,7 +52,8 @@ function PayPage() {
 
   const [paypalBack, setPaypalBack] = useState(false);
   const country = countryByCurrency(String(tx?.currency ?? "UGX"));
-  const detected = usePawaPredict(phone, country?.dial, providerFromPhone(phone, country));
+  const network = useMomoNetwork(phone, country);
+  const detected = network.name;
 
   useEffect(() => {
     void getTx(id).then((row) => {
@@ -137,7 +139,7 @@ function PayPage() {
     setPhase("waiting");
     setStatus("Sending the payment request to your phone…");
     try {
-      await startMobileMoney(tx, phone);
+      await startMobileMoney(tx, phone, network.code);
       setStatus("Approve the prompt on your phone to finish.");
     } catch (err) {
       started.current = false;
