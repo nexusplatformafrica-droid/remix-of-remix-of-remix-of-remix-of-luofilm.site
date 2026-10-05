@@ -24,6 +24,8 @@ export type HomeSection = {
   /** Keep only items released on/after this year. */
   minYear?: number;
   ranked?: boolean;
+  /** Fill only from live catalog searches (no fixed titles), newest first. */
+  live?: boolean;
 };
 
 export const HOME_SECTIONS: HomeSection[] = [
@@ -63,29 +65,15 @@ export const HOME_SECTIONS: HomeSection[] = [
   },
   {
     title: "Best Animation",
-    titles: [
-      "Minions & Monsters",
-      "Rango",
-      "The Croods",
-      "The Croods: A New Age",
-      "Toy Story 5",
-      "Zootopia 2",
-      "Despicable Me 4",
-      "Inside Out 2",
-      "Moana 2",
-      "The Bad Guys 2",
-      "Elio",
-      "The Wild Robot",
-      "KPop Demon Hunters",
-      "Migration",
-    ],
+    live: true,
     keywords: [
-      "best animation movie 2026",
-      "animated movie 2025",
+      "animation 2026",
+      "animated movie 2026",
+      "animation 2025",
       "new animation movie",
-      "pixar dreamworks movie",
+      "cartoon movie",
     ],
-    genre: /animation|animated|family/i,
+    genre: /animation|animated/i,
     avoidGenre: /anime/i,
     type: "movie",
   },
@@ -401,6 +389,13 @@ async function fetchFeed(section: HomeSection): Promise<CatalogItem[]> {
  * instead of being a short, static list.
  */
 export async function fetchSection(section: HomeSection): Promise<CatalogItem[]> {
+  if (section.live) {
+    // Live rail: only what the catalog returns right now, newest releases first.
+    const feed = await fetchFeed(section);
+    return [...feed]
+      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
+      .slice(0, Math.max(TARGET, 24));
+  }
   const [curated, feed] = await Promise.all([
     section.titles?.length
       ? Promise.all(section.titles.map((t) => lookupTitle(t, section))).then((r) =>
