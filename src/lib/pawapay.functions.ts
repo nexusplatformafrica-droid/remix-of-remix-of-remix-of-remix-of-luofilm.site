@@ -73,3 +73,12 @@ export const pawaProviders = createServerFn({ method: "POST" })
       return [] as { provider: string; displayName: string; logo: string }[];
     }
   });
+
+export const pawaCountries = createServerFn({ method: "GET" }).handler(async () => {
+  const { activeCountries } = await import("./pawapay.server");
+  try {
+    return { ok: true as const, countries: await activeCountries() };
+  } catch {
+    return { ok: false as const, countries: {} as Record<string, { provider: string; displayName: string; logo: string }[]> };
+  }
+});
