@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { WhopCheckoutEmbed, WhopExpressCheckoutButton } from "@whop/checkout/react";
-import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PaymentButtonSkeleton, WhopLogo } from "@/components/auth/PaymentLogos";
 

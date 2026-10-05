@@ -726,7 +726,8 @@ export function SubscribeModal({
               {method === "paypal" && !paypalTx && phase !== "failed" && phase !== "done" && (
                 <PaymentButtonSkeleton />
               )}
-              {method !== "paypal" && (method !== "card" || phase === "failed") && <button
+              {method !== "paypal" && method !== "card" && phase === "waiting" && <PaymentButtonSkeleton />}
+              {method !== "paypal" && (method !== "card" || phase === "failed") && phase !== "waiting" && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
