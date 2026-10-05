@@ -13,7 +13,6 @@ import { Panel, goldBtn, softField } from "./ui";
 
 const DEFAULT_ENDPOINTS: EndpointsSetting = {
   payment_backend_url: "",
-  upload_backend_url: "",
   save_api_content: false,
 };
 
@@ -116,7 +115,7 @@ export function SettingsTab() {
       </Panel>
 
       <Panel
-        title="Backends & content sync"
+        title="Payments & content sync"
         action={
           <button type="button" onClick={() => saveEnd.mutate()} disabled={saveEnd.isPending} className={`${goldBtn} inline-flex items-center gap-2`}>
             <Save className="size-4" /> Save settings
@@ -135,17 +134,6 @@ export function SettingsTab() {
               onChange={(e) => setEnd({ ...end, payment_backend_url: e.target.value })}
             />
           </label>
-          <label className="block">
-            <span className="mb-1 flex items-center gap-1.5 text-[12px] font-semibold opacity-70">
-              <Link2 className="size-3.5" /> Upload backend URL
-            </span>
-            <input
-              className={softField}
-              placeholder="https://upload.example.com/api"
-              value={end.upload_backend_url}
-              onChange={(e) => setEnd({ ...end, upload_backend_url: e.target.value })}
-            />
-          </label>
           <label className="flex items-center justify-between gap-3 rounded-2xl bg-white/65 px-4 py-3">
             <span className="flex items-center gap-2 text-[13px] font-semibold">
               <DatabaseZap className="size-4" /> Save all content from API to the database
@@ -158,7 +146,7 @@ export function SettingsTab() {
             />
           </label>
           <p className="text-[11px] opacity-55">
-            Payment and upload backends are wired once you share the endpoints — the URLs are stored here and read by the app.
+            Admin uploads use this site's Cloudflare R2 binding. Payment settings are stored here.
           </p>
         </div>
       </Panel>

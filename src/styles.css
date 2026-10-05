@@ -96,7 +96,7 @@
   --vip-foreground: oklch(0.22 0.05 60);
   --hot: oklch(0.6 0.23 25);
   --hot-foreground: oklch(0.99 0 0);
-  --sidebar-w: 172px;
+  --sidebar-w: 56px;
   --gradient-vip: linear-gradient(100deg, oklch(0.88 0.13 92), oklch(0.78 0.15 72));
   --gradient-hot: linear-gradient(135deg, oklch(0.6 0.23 25), oklch(0.62 0.22 12));
   --gradient-hero-fade: linear-gradient(

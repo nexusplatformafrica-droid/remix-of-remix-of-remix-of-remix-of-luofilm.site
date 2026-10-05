@@ -32,6 +32,7 @@ import { Route as PayIdRouteImport } from './routes/pay.$id'
 import { Route as TesoIndexRouteImport } from './routes/teso.index'
 import { Route as TesoIdRouteImport } from './routes/teso.$id'
 import { Route as WatchIdRouteImport } from './routes/watch.$id'
+import { Route as ApiPublicAdminUploadRouteImport } from './routes/api/public/admin-upload'
 import { Route as ApiPublicMovieRouteImport } from './routes/api/public/movie'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 import { Route as ApiPublicSubtitleRouteImport } from './routes/api/public/subtitle'
@@ -154,6 +155,11 @@ const WatchIdRoute = WatchIdRouteImport.update({
   path: '/watch/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAdminUploadRoute = ApiPublicAdminUploadRouteImport.update({
+  id: '/api/public/admin-upload',
+  path: '/api/public/admin-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMovieRoute = ApiPublicMovieRouteImport.update({
   id: '/api/public/movie',
   path: '/api/public/movie',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/luganda/': typeof LugandaIndexRoute
   '/luo/': typeof LuoIndexRoute
   '/teso/': typeof TesoIndexRoute
+  '/api/public/admin-upload': typeof ApiPublicAdminUploadRoute
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/luganda': typeof LugandaIndexRoute
   '/luo': typeof LuoIndexRoute
   '/teso': typeof TesoIndexRoute
+  '/api/public/admin-upload': typeof ApiPublicAdminUploadRoute
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/luganda/': typeof LugandaIndexRoute
   '/luo/': typeof LuoIndexRoute
   '/teso/': typeof TesoIndexRoute
+  '/api/public/admin-upload': typeof ApiPublicAdminUploadRoute
   '/api/public/movie': typeof ApiPublicMovieRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/subtitle': typeof ApiPublicSubtitleRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/luganda/'
     | '/luo/'
     | '/teso/'
+    | '/api/public/admin-upload'
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/luganda'
     | '/luo'
     | '/teso'
+    | '/api/public/admin-upload'
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/luganda/'
     | '/luo/'
     | '/teso/'
+    | '/api/public/admin-upload'
     | '/api/public/movie'
     | '/api/public/stream'
     | '/api/public/subtitle'
@@ -388,6 +400,7 @@ export interface RootRouteChildren {
   LugandaIndexRoute: typeof LugandaIndexRoute
   LuoIndexRoute: typeof LuoIndexRoute
   TesoIndexRoute: typeof TesoIndexRoute
+  ApiPublicAdminUploadRoute: typeof ApiPublicAdminUploadRoute
   ApiPublicMovieRoute: typeof ApiPublicMovieRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
   ApiPublicSubtitleRoute: typeof ApiPublicSubtitleRoute
@@ -558,6 +571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin-upload': {
+      id: '/api/public/admin-upload'
+      path: '/api/public/admin-upload'
+      fullPath: '/api/public/admin-upload'
+      preLoaderRoute: typeof ApiPublicAdminUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/movie': {
       id: '/api/public/movie'
       path: '/api/public/movie'
@@ -620,6 +640,7 @@ const rootRouteChildren: RootRouteChildren = {
   LugandaIndexRoute: LugandaIndexRoute,
   LuoIndexRoute: LuoIndexRoute,
   TesoIndexRoute: TesoIndexRoute,
+  ApiPublicAdminUploadRoute: ApiPublicAdminUploadRoute,
   ApiPublicMovieRoute: ApiPublicMovieRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
   ApiPublicSubtitleRoute: ApiPublicSubtitleRoute,

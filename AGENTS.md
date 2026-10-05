@@ -24,3 +24,4 @@
 - Mobile money network detection uses the national prefix table in `countries.ts` first and PawaPay predict-provider only for unknown prefixes; why: PawaPay mislabels many MTN Uganda numbers (077x, 0795x) as Airtel.
 - Catalog and subtitle downloads open the same-origin attachment URL directly so the browser's own download manager handles them; no in-app download panel. Why: user wants downloads to behave like the MovieBox website.
 - Home rows come only from the MovieBox web home (retried); no search-built or TV-app fallback rows. Why: fallbacks showed outdated sections on other hosts.
+- Admin uploads write through the site's authenticated Worker endpoint to the `MOVIE_MAX_MEDIA` Cloudflare R2 binding and serve from the same origin; never use the retired Railway signer. Why: uploads must work on Cloudflare without an external backend URL.

@@ -15,8 +15,6 @@ export type Plan = {
 export type PlansSetting = { vip: Plan[]; svip: Plan[] };
 export type EndpointsSetting = {
   payment_backend_url: string;
-  upload_backend_url: string;
-  upload_token?: string;
   save_api_content: boolean;
 };
 
@@ -105,8 +103,7 @@ export function seriesByDay<T extends { created_at: string }>(
 }
 
 /**
- * Uploads straight from the browser to Cloudflare R2 (or Firebase Storage when
- * no signer backend is configured) — no site server is involved.
+ * Uploads through the site's authenticated endpoint to its Cloudflare R2 binding.
  */
 export async function uploadMedia(
   file: File,
