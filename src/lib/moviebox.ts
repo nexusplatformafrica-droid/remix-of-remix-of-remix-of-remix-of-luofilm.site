@@ -600,9 +600,21 @@ async function mobileSearchSubjects(keyword: string, page = 1): Promise<any[]> {
   return (data?.results ?? []).flatMap((r: any) => r?.subjects ?? []);
 }
 
+/** Web BFF search (POST /subject/search) — the same search the website uses. */
+async function webSearchSubjects(keyword: string, page = 1): Promise<any[] | null> {
+  const data = await webRequest("POST", "/subject/search", {
+    keyword,
+    page,
+    perPage: 20,
+  }).catch(() => null);
+  return Array.isArray(data?.items) ? data.items : null;
+}
+
 export async function searchCatalog(keyword: string, page = 1) {
   const subjects =
-    (await tvSearchSubjects(keyword, page)) ?? (await mobileSearchSubjects(keyword, page));
+    (await webSearchSubjects(keyword, page)) ??
+    (await tvSearchSubjects(keyword, page)) ??
+    (await mobileSearchSubjects(keyword, page));
   const out: CatalogItem[] = [];
   const seen = new Set<string>();
   for (const subject of subjects) {
