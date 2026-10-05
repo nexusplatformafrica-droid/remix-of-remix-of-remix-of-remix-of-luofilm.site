@@ -173,28 +173,28 @@ function HomePage() {
     t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2B00}-\u{2BFF}]/gu, "").trim();
   const clean = <T extends { title: string; genre?: string | null }>(items: T[]) =>
     items.filter((i) => !isAdultItem(i));
-  // Curated sections (Popular Series, Most trending, K-Drama, …) filled live.
+  // The website's own home sections are used when available; the curated
+  // search-built sections are only a fallback when the web home is down.
+  const useWeb = !!data?.web;
   const sectionQueries = useQueries({
     queries: HOME_SECTIONS.map((section) =>
       queryOptions({
         queryKey: ["home-section", section.title],
         queryFn: () => getSection({ data: { title: section.title } }),
-        // Every rail refreshes itself from the live catalog instead of serving
-        // whatever was cached the first time the page opened.
+        enabled: !!data && !useWeb,
         staleTime: 30 * 1000,
         refetchInterval: 3 * 60 * 1000,
-        refetchIntervalInBackground: true,
-        refetchOnWindowFocus: true,
-        refetchOnMount: "always",
       }),
     ),
   });
 
-
-  const sections = HOME_SECTIONS.map((section, i) => ({
-    ...section,
-    items: clean(sectionQueries[i]?.data ?? []),
-  })).filter((s) => s.items.length >= 4);
+  const sections: { title: string; items: CatalogItem[]; ranked?: boolean }[] = useWeb
+    ? (data?.rows ?? []).map((r) => ({ title: cleanTitle(r.title), items: clean(r.items) }))
+        .filter((s) => s.items.length >= 4)
+    : HOME_SECTIONS.map((section, i) => ({
+        ...section,
+        items: clean(sectionQueries[i]?.data ?? []),
+      })).filter((s) => s.items.length >= 4);
 
   // Real trending straight from the catalog's own trending rail.
   const rankedSection = sections.find((s) => s.ranked);
@@ -204,14 +204,6 @@ function HomePage() {
   const trending = upstreamTrending.length >= 4 ? upstreamTrending : (rankedSection?.items ?? []);
   const comingSoon = clean(data?.comingSoon ?? []);
   const rails = sections.filter((s) => !s.ranked || s.items !== trending);
-  // Any extra upstream rows we don't already cover.
-  const extraRows = (data?.rows ?? [])
-    .slice(1)
-    .filter(
-      (r) =>
-        !/trending|coming soon/i.test(r.title) &&
-        !HOME_SECTIONS.some((s) => cleanTitle(r.title).toLowerCase() === s.title.toLowerCase()),
-    );
 
 
   return (
