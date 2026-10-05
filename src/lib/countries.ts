@@ -149,3 +149,72 @@ export function resolveCountry(
     providers: [],
   };
 }
+
+type ProviderRule = { name: string; prefixes: string[] };
+
+/** Prefix → provider map per country (national digits, leading 0 stripped). */
+const PROVIDER_PREFIXES: Record<string, ProviderRule[]> = {
+  UG: [
+    { name: "MTN MoMo", prefixes: ["77", "78", "76", "39"] },
+    { name: "Airtel Money", prefixes: ["70", "74", "75"] },
+  ],
+  KE: [{ name: "M-Pesa", prefixes: ["1", "7"] }],
+  RW: [
+    { name: "MTN MoMo", prefixes: ["72", "73"] },
+    { name: "Airtel Money", prefixes: ["78", "79"] },
+  ],
+  ZM: [
+    { name: "MTN MoMo", prefixes: ["76", "77"] },
+    { name: "Airtel Money", prefixes: ["70", "75", "97"] },
+    { name: "Zamtel", prefixes: ["95", "96"] },
+  ],
+  MZ: [
+    { name: "M-Pesa", prefixes: ["84", "85"] },
+    { name: "e-Mola", prefixes: ["86", "87"] },
+  ],
+  CM: [
+    { name: "MTN MoMo", prefixes: ["67", "650", "651", "652", "653", "654"] },
+    { name: "Orange Money", prefixes: ["69", "655", "656", "657", "658", "659"] },
+  ],
+  GA: [{ name: "Airtel Money", prefixes: ["07", "66"] }],
+  CG: [
+    { name: "MTN MoMo", prefixes: ["74", "75", "76"] },
+    { name: "Airtel Money", prefixes: ["01", "05", "06"] },
+  ],
+  BJ: [
+    { name: "MTN MoMo", prefixes: ["66", "67", "96", "97"] },
+    { name: "Moov Money", prefixes: ["61", "94", "95"] },
+  ],
+  CI: [
+    { name: "Orange Money", prefixes: ["07"] },
+    { name: "MTN MoMo", prefixes: ["05"] },
+    { name: "Moov Money", prefixes: ["01"] },
+  ],
+  SN: [
+    { name: "Orange Money", prefixes: ["77", "78"] },
+    { name: "Free Money", prefixes: ["76"] },
+    { name: "Wave", prefixes: ["70", "75"] },
+  ],
+  SL: [
+    { name: "Orange Money", prefixes: ["74", "75", "30"] },
+    { name: "Africell Money", prefixes: ["77", "88"] },
+  ],
+  CD: [
+    { name: "Vodacom M-Pesa", prefixes: ["81", "82", "83"] },
+    { name: "Airtel Money", prefixes: ["99", "97"] },
+    { name: "Orange Money", prefixes: ["84", "85", "89"] },
+  ],
+};
+
+/** Detects the mobile money provider from the entered phone number. */
+export function providerFromPhone(input: string, country: CountryInfo): string | null {
+  let d = (input ?? "").replace(/[^0-9]/g, "");
+  if (d.startsWith(country.dial)) d = d.slice(country.dial.length);
+  if (d.startsWith("0")) d = d.slice(1);
+  const rules = PROVIDER_PREFIXES[country.code];
+  if (!rules) return null;
+  for (const rule of rules) {
+    if (rule.prefixes.some((p) => d.startsWith(p))) return rule.name;
+  }
+  return null;
+}

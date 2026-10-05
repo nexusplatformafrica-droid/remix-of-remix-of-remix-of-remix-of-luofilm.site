@@ -1,4 +1,5 @@
 /* Brand marks for payment methods (official brand colours). */
+import { useState } from "react";
 
 export function CardLogo() {
   return (
@@ -64,6 +65,72 @@ export function MobileMoneyLogo({ providers }: { providers: string[] }) {
           {label}
         </span>
       ))}
+    </span>
+  );
+}
+
+/** Brand marks shown on the pay button once the provider is detected. */
+const PROVIDER_BRANDS: Record<string, { img?: string; bg: string; fg: string; label: string }> = {
+  "MTN MoMo": { img: "https://momodeveloper.mtn.com/content/momo_mtnb.png", bg: "#FFCC00", fg: "#004F71", label: "MTN" },
+  "Airtel Money": { bg: "#E40000", fg: "#FFFFFF", label: "airtel" },
+  "M-Pesa": { bg: "#4CAF50", fg: "#FFFFFF", label: "M-PESA" },
+  "Vodacom M-Pesa": { bg: "#E60000", fg: "#FFFFFF", label: "M-PESA" },
+  "Orange Money": { bg: "#FF7900", fg: "#000000", label: "orange" },
+  "Free Money": { bg: "#C8102E", fg: "#FFFFFF", label: "FREE" },
+  "Moov Money": { bg: "#00377B", fg: "#FFFFFF", label: "moov" },
+  "e-Mola": { bg: "#0A9B4B", fg: "#FFFFFF", label: "e-Mola" },
+  Zamtel: { bg: "#00A651", fg: "#FFFFFF", label: "Zamtel" },
+  "Africell Money": { bg: "#6A1B9A", fg: "#FFFFFF", label: "africell" },
+  Wave: { bg: "#1DC8FF", fg: "#003B70", label: "wave" },
+};
+
+function ProviderMark({ name }: { name: string }) {
+  const brand = PROVIDER_BRANDS[name];
+  const [imgFailed, setImgFailed] = useState(false);
+  if (!brand) return null;
+  if (brand.img && !imgFailed) {
+    return (
+      <img
+        src={brand.img}
+        alt={name}
+        onError={() => setImgFailed(true)}
+        className="h-[20px] w-auto rounded-[4px] bg-white object-contain px-[3px] py-[1px]"
+      />
+    );
+  }
+  return (
+    <span
+      style={{ background: brand.bg, color: brand.fg }}
+      className="rounded-[4px] px-[5px] py-[2px] text-[9.5px] font-black leading-none tracking-tight"
+    >
+      {brand.label}
+    </span>
+  );
+}
+
+function SmartphoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+      <path d="M12 18h.01" />
+    </svg>
+  );
+}
+
+/** Provider logo + name for the pay button (falls back to a generic label). */
+export function ProviderPayLabel({ name }: { name: string | null }) {
+  if (!name) {
+    return (
+      <span className="flex items-center gap-2">
+        <SmartphoneIcon />
+        Pay with Mobile Money
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-2">
+      <ProviderMark name={name} />
+      Pay with {name}
     </span>
   );
 }
