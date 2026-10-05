@@ -131,7 +131,7 @@ function PayPage() {
   const sendMobileMoney = async () => {
     if (!tx || started.current) return;
     if (!isValidMsisdn(phone)) {
-      setStatus("Enter a valid MTN or Airtel number, e.g. 0770 123 456");
+      setStatus("Enter a valid MTN or Airtel number, e.g. 770 123 456");
       return;
     }
     started.current = true;

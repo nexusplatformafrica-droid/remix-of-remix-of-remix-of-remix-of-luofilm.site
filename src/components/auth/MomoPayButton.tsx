@@ -72,8 +72,8 @@ export function MomoPayButton({ name, logo, checking, state = "idle", disabled, 
       type="button"
       onClick={onClick}
       disabled={disabled || checking || busy}
-      style={{ backgroundColor: c.bg, color: c.fg }}
-      className={`flex h-12 w-full items-center justify-center gap-3 rounded-xl text-[16px] font-semibold shadow-sm transition hover:brightness-95 active:scale-[0.99] disabled:cursor-default ${checking ? "opacity-80" : ""} ${className ?? ""}`}
+      style={{ backgroundColor: c.bg, color: c.fg, ...(c.bg === "#FFFFFF" ? { border: `2px solid ${c.fg}`, boxShadow: "0 6px 16px -8px rgba(228,0,0,0.55)" } : {}) }}
+      className={`flex h-12 w-full items-center justify-center gap-3 rounded-full text-[16px] font-semibold shadow-sm transition hover:brightness-95 active:scale-[0.99] disabled:cursor-default ${checking ? "opacity-80" : ""} ${className ?? ""}`}
     >
       {state === "waiting" ? (
         <>

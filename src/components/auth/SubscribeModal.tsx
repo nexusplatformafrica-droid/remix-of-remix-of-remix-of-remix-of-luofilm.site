@@ -98,7 +98,10 @@ export function SubscribeModal({
   const geo = geoQ.data?.geo ?? null;
   const ipCode = geo?.code ?? "UG";
   const country = resolveCountry(ipCode, geo, geoQ.data?.rates ?? null);
-  const momo = hasMobileMoney(country.code);
+  const pawaQ = useQuery({ queryKey: ["pawa-countries"], queryFn: () => pawaCountries(), staleTime: 1_800_000 });
+  const liveNets = pawaQ.data?.ok ? pawaQ.data.countries[country.iso3 ?? ""] ?? [] : null;
+  // Mobile money only where this PawaPay account has live networks (falls back to the local list if PawaPay is unreachable).
+  const momo = hasMobileMoney(country.code) && (liveNets === null || liveNets.length > 0);
   const methods = METHODS.filter((m) => momo || m.id !== "mobile_money");
   const settings = useQuery({ queryKey: ["plans"], queryFn: getPlans });
   const source = settings.data ?? DEFAULT_PLANS;
@@ -140,7 +143,7 @@ export function SubscribeModal({
 
   useEffect(() => {
     if (!profile?.phone || phone) return;
-    setPhone(String(profile.phone));
+    setPhone(String(profile.phone).replace(/[^0-9]/g, "").replace(new RegExp(`^${country.dial}`), "").replace(/^0+/, ""));
   }, [profile, phone]);
 
   /** Mints a scannable pay-on-another-device link for the selected plan. */
@@ -471,7 +474,15 @@ export function SubscribeModal({
                       }`}
                     >
                       {m.id === "mobile_money" ? (
-                        <MobileMoneyLogo providers={country.providers} />
+                        liveNets && liveNets.some((n) => n.logo) ? (
+                          <span className="flex items-center gap-1">
+                            {liveNets.filter((n) => n.logo).slice(0, 3).map((n) => (
+                              <img key={n.provider} src={n.logo} alt={n.displayName} className="h-6 w-auto max-w-[44px] object-contain" />
+                            ))}
+                          </span>
+                        ) : (
+                          <MobileMoneyLogo providers={country.providers} />
+                        )
                       ) : m.id === "card" ? (
                         <CardLogo />
                       ) : m.id === "google_pay" ? (
@@ -618,11 +629,11 @@ export function SubscribeModal({
                       value={(() => {
                         let d = phone.replace(/[^0-9]/g, "");
                         if (d.startsWith(country.dial) && d.length > country.localLength) d = d.slice(country.dial.length);
-                        return d;
+                        return d.replace(/^0+/, "");
                       })()}
                       onChange={(e) => {
                         let d = e.target.value.replace(/[^0-9]/g, "");
-                        if (d.startsWith("0")) d = d.slice(1);
+                        d = d.replace(/^0+/, "");
                         setPhone(d.slice(0, country.localLength));
                       }}
                       inputMode="tel"

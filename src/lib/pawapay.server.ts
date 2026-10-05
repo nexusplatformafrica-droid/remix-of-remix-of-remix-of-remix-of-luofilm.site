@@ -131,3 +131,14 @@ export async function balances() {
     balance: Number(b.balance),
   }));
 }
+
+/** Every country (ISO3) enabled on this PawaPay account, with its live networks and logos. */
+export async function activeCountries(): Promise<Record<string, { provider: string; displayName: string; logo: string }[]>> {
+  const r = await call(`/v2/active-conf?operationType=DEPOSIT`);
+  const out: Record<string, { provider: string; displayName: string; logo: string }[]> = {};
+  for (const c of r?.countries ?? []) {
+    const list = (c?.providers ?? []).map((p: any) => ({ provider: String(p.provider), displayName: String(p.displayName ?? p.provider), logo: p.logo ? String(p.logo) : "" }));
+    if (c?.country && list.length) out[String(c.country)] = list;
+  }
+  return out;
+}
