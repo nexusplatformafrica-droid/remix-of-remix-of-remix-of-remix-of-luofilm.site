@@ -50,3 +50,14 @@ export const pawaBalances = createServerFn({ method: "GET" }).handler(async () =
     return { ok: false as const, balances: [] as { country: string; currency: string; balance: number }[] };
   }
 });
+
+export const pawaPredict = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ phone: z.string().min(8).max(20) }).parse(d))
+  .handler(async ({ data }) => {
+    const { predictProvider } = await import("./pawapay.server");
+    try {
+      return { ok: true as const, ...(await predictProvider(data.phone)) };
+    } catch {
+      return { ok: false as const, provider: "", phoneNumber: "", country: "" };
+    }
+  });
