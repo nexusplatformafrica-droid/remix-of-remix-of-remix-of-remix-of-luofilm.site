@@ -49,17 +49,17 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "LUOFILM.SITE — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo Translated Movies and Lugandan Translated Movies",
+          "MOVIE MAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo Translated Movies and Lugandan Translated Movies",
       },
       {
         name: "description",
         content:
-          "LUOFILM.SITE — watch and download free movies, series, animations and episodes with multiple subtitles, plus Luo translated movies and Lugandan translated movies in HD.",
+          "MOVIE MAX — watch and download free movies, series, animations and episodes with multiple subtitles, plus Luo translated movies and Lugandan translated movies in HD.",
       },
       {
         property: "og:title",
         content:
-          "LUOFILM.SITE — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo & Lugandan Translated Movies",
+          "MOVIE MAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo & Lugandan Translated Movies",
       },
       {
         property: "og:description",
