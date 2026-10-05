@@ -7,6 +7,7 @@ const moneySchema = z.object({
   currency: z.string().length(3),
   reference: z.string().min(1),
   message: z.string().optional(),
+  provider: z.string().regex(/^[A-Z0-9_]{3,40}$/).optional(),
 });
 
 export const pawaDeposit = createServerFn({ method: "POST" })
@@ -59,5 +60,16 @@ export const pawaPredict = createServerFn({ method: "POST" })
       return { ok: true as const, ...(await predictProvider(data.phone)) };
     } catch {
       return { ok: false as const, provider: "", phoneNumber: "", country: "" };
+    }
+  });
+
+export const pawaProviders = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ country: z.string().regex(/^[A-Z]{3}$/) }).parse(d))
+  .handler(async ({ data }) => {
+    const { activeProviders } = await import("./pawapay.server");
+    try {
+      return await activeProviders(data.country);
+    } catch {
+      return [] as { provider: string; displayName: string; logo: string }[];
     }
   });

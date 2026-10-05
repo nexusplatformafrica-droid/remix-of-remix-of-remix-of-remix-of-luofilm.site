@@ -54,6 +54,8 @@ export type DepositInput = {
   currency?: string;
   reference: string;
   description?: string;
+  /** PawaPay provider code the customer confirmed (e.g. MTN_MOMO_UGA). */
+  provider?: string | undefined;
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -62,7 +64,7 @@ export const relworx = {
   deposit: async (input: DepositInput): Promise<any> => {
     const { pawaDeposit } = await import("./pawapay.functions");
     const r = await pawaDeposit({
-      data: { phone: input.msisdn, amount: input.amount, currency: input.currency ?? CURRENCY_CODE, reference: input.reference, message: input.description },
+      data: { phone: input.msisdn, amount: input.amount, currency: input.currency ?? CURRENCY_CODE, reference: input.reference, message: input.description, ...(input.provider ? { provider: input.provider } : {}) },
     });
     if (!r.ok) throw new Error(r.message);
     return r;
@@ -70,7 +72,7 @@ export const relworx = {
   withdraw: async (input: DepositInput): Promise<any> => {
     const { pawaPayout } = await import("./pawapay.functions");
     const r = await pawaPayout({
-      data: { phone: input.msisdn, amount: input.amount, currency: input.currency ?? CURRENCY_CODE, reference: input.reference, message: input.description },
+      data: { phone: input.msisdn, amount: input.amount, currency: input.currency ?? CURRENCY_CODE, reference: input.reference, message: input.description, ...(input.provider ? { provider: input.provider } : {}) },
     });
     if (!r.ok) throw new Error(r.message);
     return r;
