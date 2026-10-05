@@ -2,6 +2,7 @@ import { useState } from "react";
 import { WhopCheckoutEmbed, WhopExpressCheckoutButton } from "@whop/checkout/react";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentButtonSkeleton, WhopLogo } from "@/components/auth/PaymentLogos";
 
 /**
  * Whop's real one-click pay button. Clicking it opens Whop's floating payment
@@ -34,9 +35,7 @@ export default function WhopEmbed({
             if (rendered === "none") setNoExpress(true);
           }}
           fallback={
-            <div className="grid h-11 place-items-center">
-              <Loader2 className="size-5 animate-spin opacity-60" />
-            </div>
+            <PaymentButtonSkeleton />
           }
         />
       )}
@@ -46,7 +45,8 @@ export default function WhopEmbed({
           onClick={() => setOpen(true)}
           className="flex h-11 w-full items-center justify-center rounded-full bg-foreground text-[14px] font-bold text-background transition hover:opacity-90"
         >
-          Pay with card · Whop
+          <span>Pay with</span>
+          <WhopLogo />
         </button>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -63,7 +63,7 @@ export default function WhopEmbed({
               setOpen(false);
               onDone?.();
             }}
-            fallback={<div className="p-6 text-center text-xs opacity-60">Loading secure payment…</div>}
+            fallback={<div className="p-6"><PaymentButtonSkeleton /></div>}
           />
         </DialogContent>
       </Dialog>

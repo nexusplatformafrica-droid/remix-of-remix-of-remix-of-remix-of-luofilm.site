@@ -76,3 +76,24 @@ export function PayPalLogo() {
     </span>
   );
 }
+
+export function WhopLogo() {
+  return (
+    <span className="inline-flex items-center gap-1.5" aria-label="Whop">
+      <svg viewBox="0 0 24 24" className="size-[17px]" aria-hidden>
+        <rect width="24" height="24" rx="6" fill="#FF6243" />
+        <path d="M5.2 7.2h3.2l1.4 6.1 1.1-4.5h2.5l1.1 4.5 1.4-6.1h3.1l-2.8 9.6h-3l-1.1-4.2-1.1 4.2H8z" fill="#FFFFFF" />
+      </svg>
+      <span className="text-[13px] font-black leading-none text-foreground">whop</span>
+    </span>
+  );
+}
+
+export function PaymentButtonSkeleton() {
+  return (
+    <div className="flex h-11 w-full animate-pulse items-center justify-center gap-2 rounded-full bg-foreground/10" aria-label="Loading payment button">
+      <span className="size-4 rounded bg-foreground/15" />
+      <span className="h-3 w-24 rounded bg-foreground/15" />
+    </div>
+  );
+}

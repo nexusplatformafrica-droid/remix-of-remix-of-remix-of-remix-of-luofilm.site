@@ -187,10 +187,17 @@ function HomePage() {
           <TopBar />
 
           {!data && (
-            <div className="px-3 pt-[68px] sm:px-4 lg:px-8 lg:pt-20">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="aspect-[16/9] animate-pulse rounded-xl bg-muted/40" />
+            <div className="overflow-hidden px-3 pt-[68px] [--card-w:calc((100vw-12px)/1.9)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:px-8 lg:pt-20 lg:[--card-w:calc((100vw-260px)/3)]">
+              <div className="flex w-max">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="w-[calc(var(--card-w)+8px)] shrink-0 px-1">
+                    <div className="hero-ring rounded-2xl p-[2px]">
+                      <div className="relative aspect-[16/9] overflow-hidden rounded-[calc(1rem-2px)] bg-card">
+                        <div className="absolute inset-0 animate-pulse bg-muted/60" />
+                        <div className="absolute bottom-3 left-3 h-4 w-2/5 animate-pulse rounded bg-background/70" />
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
