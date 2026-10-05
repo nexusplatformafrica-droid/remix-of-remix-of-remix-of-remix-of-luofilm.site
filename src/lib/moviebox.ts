@@ -845,7 +845,89 @@ async function tvSources(
   return sources;
 }
 
+/**
+ * Web playback: GET {media-domain}/subject/play returns the same signed MP4
+ * files the website's player uses; captions come from /subject/caption with
+ * the stream id. Needs the title's detailPath slug (captured from search /
+ * home results); returns [] when the slug is unknown so callers fall back.
+ */
+async function webSources(
+  subjectId: string,
+  season: number,
+  episode: number,
+): Promise<StreamSource[]> {
+  const detailPath = detailPathCache.get(subjectId);
+  if (!detailPath) return [];
+  const { se, ep } = playIdentity(season, episode);
+  const host = await getMediaDomain().catch(() => "https://mzfi.me");
+  const info = await webRequest(
+    "GET",
+    `/subject/play?subjectId=${subjectId}&se=${se}&ep=${ep}&detailPath=${encodeURIComponent(
+      detailPath,
+    )}&streamSignType=1&supportCodecs%5Bh264%5D=1`,
+    undefined,
+    host,
+  ).catch(() => null);
+  let streams: any[] = Array.isArray(info?.streams) ? info.streams : [];
+  if (!streams.length) {
+    // Download endpoint lists the same files for some titles.
+    const dl = await webRequest(
+      "GET",
+      `/subject/download?subjectId=${subjectId}&se=${se}&ep=${ep}&detailPath=${encodeURIComponent(
+        detailPath,
+      )}`,
+    ).catch(() => null);
+    streams = Array.isArray(dl?.downloads) ? dl.downloads : [];
+  }
+  const found = new Map<string, StreamSource>();
+  for (const s of streams) {
+    const url = typeof s?.url === "string" ? s.url : "";
+    if (!url.startsWith("https://")) continue;
+    const fileKey = url.split("?")[0]!;
+    const resolution = parseInt(String(s?.resolutions ?? s?.resolution ?? ""), 10) || 0;
+    const prev = found.get(fileKey);
+    if (prev && prev.resolution >= resolution) continue;
+    const bytes = Number(s?.size) || 0;
+    found.set(fileKey, {
+      id: String(s?.id ?? fileKey.split("/").pop()?.replace(/\.\w+$/, "") ?? fileKey),
+      url,
+      resolution,
+      codec: s?.codecName ? String(s.codecName) : s?.codec ? String(s.codec) : null,
+      bytes,
+      size: fmtBytes(bytes),
+      promo: isPromoEntry(s),
+      captions: [],
+    });
+  }
+  const codecRank = (s: StreamSource) => (s.codec && /hevc|h265/i.test(s.codec) ? 1 : 0);
+  const sources = [...found.values()].sort(
+    (a, b) => codecRank(a) - codecRank(b) || b.resolution - a.resolution || b.bytes - a.bytes,
+  );
+  const streamId = streams.find((s: any) => s?.id)?.id;
+  if (sources.length && streamId) {
+    const data = await webRequest(
+      "GET",
+      `/subject/caption?format=MP4&id=${streamId}&subjectId=${subjectId}&detailPath=${encodeURIComponent(
+        detailPath,
+      )}`,
+    ).catch(() => null);
+    const seen = new Set<string>();
+    const captions = (Array.isArray(data?.captions) ? data.captions : [])
+      .filter((c: any) => typeof c?.url === "string" && c.url.startsWith("https://"))
+      .map((c: any) => ({
+        label: String(c.lanName ?? c.language ?? c.languageCode ?? "Subtitle"),
+        url: String(c.url),
+      }))
+      .filter((c: { label: string }) => (seen.has(c.label) ? false : (seen.add(c.label), true)));
+    for (const s of sources) s.captions = captions;
+  }
+  return sources;
+}
+
 export async function fetchSources(subjectId: string, season = 0, episode = 0) {
+  // Web playback first (the website's own player API); TV BFF as fallback.
+  const web = await webSources(subjectId, season, episode).catch(() => [] as StreamSource[]);
+  if (web.some((s) => !s.promo)) return web.filter((s) => !s.promo);
   let tv = await tvSources(subjectId, season, episode);
   if (!tv.some((s) => !s.promo)) {
     // One fresh retry before declaring a title unplayable.
