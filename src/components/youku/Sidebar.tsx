@@ -22,7 +22,7 @@ export function Sidebar() {
         <img src={markAsset} alt="" className="h-8 w-auto shrink-0" loading="eager" />
         <span className="whitespace-nowrap font-[Bebas_Neue,system-ui,sans-serif] text-[17px] leading-none tracking-normal">
           <span className="bg-gradient-to-r from-[#00EAFF] to-[#5CFF00] bg-clip-text text-transparent">
-            LUOFILM
+            MOVIE MAX
           </span>
           <span className="text-[#C822FF]">.SITE</span>
         </span>

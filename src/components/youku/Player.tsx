@@ -238,7 +238,7 @@ export function Player({
         controls,
         layers: [
           {
-            html: `<img src="${watermarkUrl}" alt="LUOFILM" style="height:34px;width:auto;opacity:.8" />`,
+            html: `<img src="${watermarkUrl}" alt="MOVIE MAX" style="height:34px;width:auto;opacity:.8" />`,
             style: { position: "absolute", top: "14px", right: "14px", pointerEvents: "none" },
           },
         ],

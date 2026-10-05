@@ -14,12 +14,12 @@ const WhopEmbed = lazy(() => import("@/components/auth/WhopEmbed"));
 export const Route = createFileRoute("/pay/$id")({
   head: () => ({
     meta: [
-      { title: "Complete your payment — LUOFILM.SITE" },
-      { name: "description", content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal." },
-      { property: "og:title", content: "Complete your payment — LUOFILM.SITE" },
+      { title: "Complete your payment — MOVIE MAX" },
+      { name: "description", content: "Finish your MOVIE MAX membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal." },
+      { property: "og:title", content: "Complete your payment — MOVIE MAX" },
       {
         property: "og:description",
-        content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal.",
+        content: "Finish your MOVIE MAX membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -168,7 +168,7 @@ function PayPage() {
     <main className="grid min-h-screen place-items-center bg-[linear-gradient(160deg,oklch(0.98_0.02_20),oklch(0.97_0.03_320)_45%,oklch(0.98_0.03_80))] px-4 py-10 text-[oklch(0.28_0.03_320)]">
       <section className="w-full max-w-[420px] rounded-[28px] bg-white/70 p-6 shadow-2xl ring-1 ring-black/5 backdrop-blur">
         <h1 className="text-[20px] font-black tracking-tight">Complete your payment</h1>
-        <p className="mt-1 text-[12px] opacity-65">LUOFILM.SITE membership</p>
+        <p className="mt-1 text-[12px] opacity-65">MOVIE MAX membership</p>
 
         {tx ? (
           <>
@@ -267,17 +267,21 @@ function PayPage() {
               />
             )}
 
-            {phase !== "done" && isWallet && !whopUrl && (
+            {phase !== "done" && isWallet && !whopUrl && phase === "waiting" && (
+              <div className="mt-5 flex h-12 w-full animate-pulse items-center justify-center gap-2 rounded-full bg-[oklch(0.92_0.04_80)]">
+                <CreditCard className="size-4 opacity-40" />
+                <div className="h-3 w-32 rounded-full bg-[oklch(0.85_0.06_75)]" />
+              </div>
+            )}
+
+            {phase !== "done" && isWallet && !whopUrl && phase !== "waiting" && (
               <button
                 type="button"
                 onClick={() => void openWhop()}
-                disabled={phase === "waiting"}
                 className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[15px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60"
               >
                 <CreditCard className="size-4" />
-                {phase === "waiting"
-                  ? "Loading secure form…"
-                  : method === "google_pay"
+                {method === "google_pay"
                     ? "Pay with Google Pay"
                     : method === "apple_pay"
                       ? "Pay with Apple Pay"
@@ -286,14 +290,14 @@ function PayPage() {
             )}
 
             {whopUrl && whopUrl !== "return" && phase !== "done" && (
-<div className="mt-4 min-h-[420px] rounded-2xl bg-white ring-1 ring-black/10"><Suspense fallback={null}><WhopEmbed sessionId={whopUrl} /></Suspense></div>
+<div className="mt-4 min-h-[420px] rounded-2xl bg-white ring-1 ring-black/10"><Suspense fallback={<div className="grid min-h-[420px] animate-pulse place-items-center text-[12px] font-semibold opacity-50">Loading secure payment form…</div>}><WhopEmbed sessionId={whopUrl} /></Suspense></div>
             )}
 
             <a
               href="/"
               className="mt-3 block text-center text-[11px] font-semibold opacity-60 hover:opacity-100"
             >
-              Back to LUOFILM
+              Back to MOVIE MAX
             </a>
           </>
         ) : (

@@ -121,11 +121,16 @@ export function PayPalButtons({
   return (
     <div className="relative">
       {(loading || starting) && (
-        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <Loader2 className="size-5 animate-spin opacity-60" />
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <div className="flex h-11 w-full animate-pulse items-center justify-center gap-2 rounded-md bg-muted/60">
+            <Loader2 className="size-4 animate-spin opacity-50" />
+            <span className="text-[12px] font-semibold opacity-50">
+              {starting ? "Opening PayPal…" : "Loading PayPal…"}
+            </span>
+          </div>
         </div>
       )}
-      <div ref={box} className="min-h-11" />
+      <div ref={box} className={loading ? "min-h-11 opacity-0" : "min-h-11"} />
     </div>
   );
 }

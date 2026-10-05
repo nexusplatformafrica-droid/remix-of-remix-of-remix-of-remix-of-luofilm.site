@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
@@ -49,17 +49,17 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "LUOFILM.SITE — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo Translated Movies and Lugandan Translated Movies",
+          "MOVIE MAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo Translated Movies and Lugandan Translated Movies",
       },
       {
         name: "description",
         content:
-          "LUOFILM.SITE — watch and download free movies, series, animations and episodes with multiple subtitles, plus Luo translated movies and Lugandan translated movies in HD.",
+          "MOVIE MAX — watch and download free movies, series, animations and episodes with multiple subtitles, plus Luo translated movies and Lugandan translated movies in HD.",
       },
       {
         property: "og:title",
         content:
-          "LUOFILM.SITE — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo & Lugandan Translated Movies",
+          "MOVIE MAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo & Lugandan Translated Movies",
       },
       {
         property: "og:description",
@@ -124,6 +124,41 @@ function HomePage() {
   const copies = Math.max(2, Math.ceil(6 / Math.max(slides.length, 1)));
   const marqueeDur = Math.max(28, slides.length * 8);
 
+  // Keep the skeleton up until the first visible slide images have actually
+  // downloaded, so cards never pop in half-loaded under or beside it.
+  const [heroReady, setHeroReady] = useState(false);
+  const slideKey = slides.map((s) => s.id).join("|");
+  useEffect(() => {
+    setHeroReady(false);
+    if (!slides.length) return;
+    let cancelled = false;
+    const first = slides.slice(0, 4).map((s) => s.image).filter(Boolean) as string[];
+    const done = () => {
+      if (!cancelled) setHeroReady(true);
+    };
+    if (!first.length) {
+      done();
+      return;
+    }
+    let left = first.length;
+    const one = () => {
+      if (--left <= 0) done();
+    };
+    for (const src of first) {
+      const img = new Image();
+      img.onload = one;
+      img.onerror = one;
+      img.src = src;
+    }
+    // Never trap the page on a slow network — reveal after 5s regardless.
+    const t = setTimeout(done, 5000);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slideKey]);
+
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
   const degraded =
@@ -186,7 +221,7 @@ function HomePage() {
         <div className="relative">
           <TopBar />
 
-          {!data && (
+          {(!heroReady || !slides.length) && (
             <div className="px-3 pt-[68px] sm:px-4 lg:px-8 lg:pt-20">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -196,9 +231,7 @@ function HomePage() {
             </div>
           )}
 
-          {!!data && !slides.length && <div className="h-16" />}
-
-          {!!slides.length && (
+          {heroReady && !!slides.length && (
             <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-12px)/1.9)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-260px)/3)] lg:px-8">
               {/* The hero never stops: cards in animated gradient holders pass
                   slowly across the page forever — 2 across on mobile, 3 bigger

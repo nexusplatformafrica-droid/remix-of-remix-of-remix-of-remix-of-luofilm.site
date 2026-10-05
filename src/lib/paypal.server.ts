@@ -88,14 +88,14 @@ export async function createPayPalOrder(input: {
         {
           reference_id: input.reference.slice(0, 120),
           custom_id: input.txId,
-          description: `LUOFILM ${input.planName}`.slice(0, 120),
+          description: `MOVIE MAX ${input.planName}`.slice(0, 120),
           amount: { currency_code: price.currency, value: price.value },
         },
       ],
       payment_source: {
         paypal: {
           experience_context: {
-            brand_name: "LUOFILM",
+            brand_name: "MOVIE MAX",
             user_action: "PAY_NOW",
             shipping_preference: "NO_SHIPPING",
             return_url: input.returnUrl,

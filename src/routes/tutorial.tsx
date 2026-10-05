@@ -26,27 +26,27 @@ const STEPS = [
   {
     icon: Megaphone,
     title: "4. Get every new translation first",
-    body: "Follow the LUOFILM WhatsApp channel — every new Luo and Luganda translation is posted there with its direct watch link.",
+    body: "Follow the MOVIE MAX WhatsApp channel — every new Luo and Luganda translation is posted there with its direct watch link.",
   },
 ];
 
 export const Route = createFileRoute("/tutorial")({
   head: () => ({
     meta: [
-      { title: "How to Find Luo & Luganda Translated Movies — LUOFILM.SITE" },
+      { title: "How to Find Luo & Luganda Translated Movies — MOVIE MAX" },
       {
         name: "description",
         content:
-          "A quick 4-step tutorial showing exactly where to find, watch and download Luo and Luganda translated movies and series on LUOFILM.SITE.",
+          "A quick 4-step tutorial showing exactly where to find, watch and download Luo and Luganda translated movies and series on MOVIE MAX.",
       },
       {
         property: "og:title",
-        content: "How to Find Luo & Luganda Translated Movies — LUOFILM.SITE",
+        content: "How to Find Luo & Luganda Translated Movies — MOVIE MAX",
       },
       {
         property: "og:description",
         content:
-          "Quick guide: where to find, watch and download Luo and Luganda translated movies on LUOFILM.SITE.",
+          "Quick guide: where to find, watch and download Luo and Luganda translated movies on MOVIE MAX.",
       },
       { property: "og:type", content: "article" },
       { property: "og:url", content: "/tutorial" },
@@ -59,7 +59,7 @@ export const Route = createFileRoute("/tutorial")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "HowTo",
-          name: "How to find Luo and Luganda translated movies on LUOFILM.SITE",
+          name: "How to find Luo and Luganda translated movies on MOVIE MAX",
           step: STEPS.map((s) => ({ "@type": "HowToStep", name: s.title, text: s.body })),
         }),
       },
@@ -81,7 +81,7 @@ function TutorialPage() {
             Where to get Luo & Luganda translated movies
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            A 30-second tour of LUOFILM.SITE — follow these four steps and you will never miss a
+            A 30-second tour of MOVIE MAX — follow these four steps and you will never miss a
             translation again.
           </p>
 

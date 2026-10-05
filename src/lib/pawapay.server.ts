@@ -40,8 +40,8 @@ export async function predictProvider(phone: string) {
 }
 
 const cleanMessage = (s: string) => {
-  const t = (s || "LUOFILM").replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22);
-  return t.length >= 4 ? t : "LUOFILM";
+  const t = (s || "MOVIE MAX").replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22);
+  return t.length >= 4 ? t : "MOVIE MAX";
 };
 const amountStr = (n: number) => String(Math.round(Number(n)));
 
@@ -73,7 +73,7 @@ export async function deposit(input: { phone: string; amount: number; currency: 
       currency: input.currency,
       payer: { type: "MMO", accountDetails: { phoneNumber: p.phoneNumber, provider: p.provider } },
       clientReferenceId: input.reference.slice(0, 50),
-      customerMessage: cleanMessage(input.message ?? "LUOFILM membership"),
+      customerMessage: cleanMessage(input.message ?? "MOVIE MAX membership"),
     }),
   });
   reject(r);
@@ -91,7 +91,7 @@ export async function payout(input: { phone: string; amount: number; currency: s
       currency: input.currency,
       recipient: { type: "MMO", accountDetails: { phoneNumber: p.phoneNumber, provider: p.provider } },
       clientReferenceId: input.reference.slice(0, 50),
-      customerMessage: cleanMessage(input.message ?? "LUOFILM payout"),
+      customerMessage: cleanMessage(input.message ?? "MOVIE MAX payout"),
     }),
   });
   reject(r);

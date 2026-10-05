@@ -81,7 +81,7 @@ export function AuthModal({ open, onOpenChange }: { open: boolean; onOpenChange:
       <DialogContent className="max-w-[400px] overflow-hidden border-0 bg-[linear-gradient(165deg,oklch(0.98_0.02_20),oklch(0.97_0.03_320)_55%,oklch(0.98_0.03_80))] p-6 text-[oklch(0.28_0.03_320)] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-center text-[20px] font-bold tracking-tight">
-            {mode === "signin" ? "Sign in to LUOFILM" : "Create your account"}
+            {mode === "signin" ? "Sign in to MOVIE MAX" : "Create your account"}
           </DialogTitle>
         </DialogHeader>
 

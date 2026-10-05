@@ -18,8 +18,8 @@ export const Route = createFileRoute("/p/$provider/")({
   },
   head: ({ params }) => {
     const p = PROVIDERS.find((x) => x.id === params.provider);
-    const title = `${p?.name ?? "Provider"} Movies & Series — LUOFILM`;
-    const description = `Browse, stream and download ${p?.name ?? ""} titles in every quality on LUOFILM: ${p?.blurb ?? ""}.`;
+    const title = `${p?.name ?? "Provider"} Movies & Series — MOVIE MAX`;
+    const description = `Browse, stream and download ${p?.name ?? ""} titles in every quality on MOVIE MAX: ${p?.blurb ?? ""}.`;
     return {
       meta: [
         { title },

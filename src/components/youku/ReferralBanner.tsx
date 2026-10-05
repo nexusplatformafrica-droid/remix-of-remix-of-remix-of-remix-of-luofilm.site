@@ -70,7 +70,7 @@ export function ReferralBanner() {
   }, [user]);
 
   const link = referralLink(user?.id);
-  const message = `🎬 Watch & download free movies, series, Luo and Luganda translated movies on LUOFILM. Join with my link: ${link}`;
+  const message = `🎬 Watch & download free movies, series, Luo and Luganda translated movies on MOVIE MAX. Join with my link: ${link}`;
 
   const share = async () => {
     if (!user) {
@@ -80,7 +80,7 @@ export function ReferralBanner() {
     }
     if (navigator.share) {
       try {
-        await navigator.share({ title: "LUOFILM", text: message, url: link });
+        await navigator.share({ title: "MOVIE MAX", text: message, url: link });
         return;
       } catch {
         /* cancelled — fall through to WhatsApp */
@@ -128,7 +128,7 @@ export function ReferralBanner() {
       <div className="pointer-events-auto relative w-full max-w-4xl overflow-hidden rounded-lg border border-vip/55 bg-card shadow-2xl shadow-vip/20 animate-in zoom-in-95 duration-500">
         <img
           src={referralArtwork}
-          alt="Friends sharing LUOFILM on a phone"
+          alt="Friends sharing MOVIE MAX on a phone"
           className="absolute inset-0 size-full object-cover object-center"
           decoding="async"
         />
@@ -148,7 +148,7 @@ export function ReferralBanner() {
 
         <div className="relative z-10 flex min-h-[500px] w-full max-w-xl flex-col justify-center p-6 sm:min-h-[530px] sm:p-10 lg:p-12">
           <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase text-vip">
-            <Sparkles className="size-4" /> LUOFILM rewards
+            <Sparkles className="size-4" /> MOVIE MAX rewards
           </div>
           <h2 className="max-w-md text-3xl font-black leading-tight text-foreground sm:text-5xl">
             Share movies.

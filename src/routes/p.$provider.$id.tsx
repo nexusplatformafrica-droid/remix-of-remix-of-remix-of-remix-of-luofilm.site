@@ -17,7 +17,7 @@ import { startWorkerDownload, streamUrl } from "@/lib/download";
 
 export const Route = createFileRoute("/p/$provider/$id")({
   head: ({ params }) => {
-    const title = `Watch & Download on ${providerName(params.provider)} — LUOFILM`;
+    const title = `Watch & Download on ${providerName(params.provider)} — MOVIE MAX`;
     const description = `Stream or download this title from ${providerName(params.provider)} in every available quality, up to 4K and 8K.`;
     return {
       meta: [

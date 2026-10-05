@@ -8,7 +8,7 @@ import { LuoLibrary } from "@/components/luo/LuoLibrary";
 export const Route = createFileRoute("/luganda/")({
   head: () => {
     const title =
-      "LUOFILM.SITE Watch and Download Luganda Translated Movies by Your Favourite VJ — Movies for VJ Junior, VJ Ice P, VJ Jingo, VJ Mark and All Other Lugandan VJs";
+      "MOVIE MAX Watch and Download Luganda Translated Movies by Your Favourite VJ — Movies for VJ Junior, VJ Ice P, VJ Jingo, VJ Mark and All Other Lugandan VJs";
     const description =
       "Watch and download Luganda translated movies and series from your favourite VJs — VJ Junior, VJ Ice P, VJ Jingo, VJ Mark and all other Lugandan VJs. Movies, series, animation, comedy, action and every genre, free in HD.";
     return {
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/luganda/")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: "/luganda" },
-        { property: "og:site_name", content: "LUOFILM.SITE" },
+        { property: "og:site_name", content: "MOVIE MAX" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
