@@ -15,12 +15,14 @@ export const Route = createFileRoute("/api/public/admin-upload")({
           if (!object) return new Response("Not found", { status: 404 });
           const headers = new Headers({
             "content-type": object.httpMetadata?.contentType ?? "application/octet-stream",
+            "x-content-type-options": "nosniff",
             "accept-ranges": "bytes",
             etag: object.httpEtag,
             "cache-control": "public, max-age=3600",
             "content-length": String(object.range?.length ?? object.size),
           });
           if (object.range) headers.set("content-range", `bytes ${object.range.offset}-${object.range.offset + object.range.length - 1}/${object.size}`);
+          if (!/^(image\/(?!svg\+xml)|video\/|audio\/)/i.test(object.httpMetadata?.contentType ?? "")) headers.set("content-disposition", "attachment");
           return new Response(object.body, { status: object.range ? 206 : 200, headers });
         } catch { return new Response("Storage unavailable", { status: 503 }); }
       },
