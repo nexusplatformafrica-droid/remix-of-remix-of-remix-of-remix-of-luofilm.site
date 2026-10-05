@@ -30,6 +30,8 @@ export type HomeData = {
   trending?: CatalogItem[];
   comingSoon?: CatalogItem[];
   degraded?: boolean;
+  /** True when rows are the MovieBox website's own home sections. */
+  web?: boolean;
 };
 
 export const getHome = createServerFn({ method: "GET" }).handler(async (): Promise<HomeData> => {
