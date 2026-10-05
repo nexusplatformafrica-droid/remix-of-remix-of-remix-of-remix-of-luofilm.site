@@ -51,6 +51,7 @@ export const CATEGORIES: SiteCategory[] = [
     keyword: "drama",
     type: "series",
   },
+  { slug: "tv", short: "TV", label: "TV shows", icon: "live-tv", keyword: "television series", type: "series" },
   {
     slug: "love-story",
     short: "Romance",
