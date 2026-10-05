@@ -124,6 +124,41 @@ function HomePage() {
   const copies = Math.max(2, Math.ceil(6 / Math.max(slides.length, 1)));
   const marqueeDur = Math.max(28, slides.length * 8);
 
+  // Keep the skeleton up until the first visible slide images have actually
+  // downloaded, so cards never pop in half-loaded under or beside it.
+  const [heroReady, setHeroReady] = useState(false);
+  const slideKey = slides.map((s) => s.id).join("|");
+  useEffect(() => {
+    setHeroReady(false);
+    if (!slides.length) return;
+    let cancelled = false;
+    const first = slides.slice(0, 4).map((s) => s.image).filter(Boolean) as string[];
+    const done = () => {
+      if (!cancelled) setHeroReady(true);
+    };
+    if (!first.length) {
+      done();
+      return;
+    }
+    let left = first.length;
+    const one = () => {
+      if (--left <= 0) done();
+    };
+    for (const src of first) {
+      const img = new Image();
+      img.onload = one;
+      img.onerror = one;
+      img.src = src;
+    }
+    // Never trap the page on a slow network — reveal after 5s regardless.
+    const t = setTimeout(done, 5000);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slideKey]);
+
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
   const degraded =

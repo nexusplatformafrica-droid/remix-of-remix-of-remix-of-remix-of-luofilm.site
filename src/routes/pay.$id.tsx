@@ -290,7 +290,7 @@ function PayPage() {
             )}
 
             {whopUrl && whopUrl !== "return" && phase !== "done" && (
-<div className="mt-4 min-h-[420px] rounded-2xl bg-white ring-1 ring-black/10"><Suspense fallback={null}><WhopEmbed sessionId={whopUrl} /></Suspense></div>
+<div className="mt-4 min-h-[420px] rounded-2xl bg-white ring-1 ring-black/10"><Suspense fallback={<div className="grid min-h-[420px] animate-pulse place-items-center text-[12px] font-semibold opacity-50">Loading secure payment form…</div>}><WhopEmbed sessionId={whopUrl} /></Suspense></div>
             )}
 
             <a
