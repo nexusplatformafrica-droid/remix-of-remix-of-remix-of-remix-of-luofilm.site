@@ -8,7 +8,7 @@
  *  - `keywords`: merged live searches, then filtered by the catalog's own
  *    genre / type / year metadata.
  */
-import { searchCatalog, type CatalogItem } from "./moviebox";
+import { searchCatalog, fetchTabRows, fetchMostTrending, type CatalogItem } from "./moviebox";
 
 export type HomeSection = {
   title: string;
@@ -26,13 +26,17 @@ export type HomeSection = {
   ranked?: boolean;
   /** Fill only from live catalog searches (no fixed titles), newest first. */
   live?: boolean;
+  /** Take items from the catalog's own real rails: [tabId, rail-title pattern]. */
+  rails?: [number, RegExp][];
+  /** Use the catalog's combined real trending line-up. */
+  realTrending?: boolean;
 };
 
 export const HOME_SECTIONS: HomeSection[] = [
   {
     live: true,
     title: "Popular Series",
-    keywords: ["popular series 2026","new series 2026","top tv show","trending series"],
+    rails: [[5, /series in progress/i], [0, /western tv|meet your next binge|trending/i]],
     type: "series",
   },
   {
@@ -58,19 +62,20 @@ export const HOME_SECTIONS: HomeSection[] = [
   {
     live: true,
     title: "Most trending",
-    keywords: [
-      "trending now 2026",
-      "new release 2026",
-      "latest movie 2026",
-      "top 10 this week",
-    ],
-    minYear: 2025,
+    realTrending: true,
     ranked: true,
   },
   {
     live: true,
     title: "Bet+",
-    keywords: ["bet plus","tyler perry","black drama series","urban drama"],
+    // Real BET+ originals, each matched strictly by name in the catalog.
+    titles: [
+      "Sistas", "The Oval", "Ruthless", "All the Queen's Men", "Bigger",
+      "The Family Business", "Zatima", "Tyler Perry's House of Payne",
+      "The Ms. Pat Show", "First Wives Club", "Average Joe", "Kingdom Business",
+      "Bruh", "Johnson", "Carl Weber's The Family Business", "American Gangster: Trap Queens",
+      "Tyler Perry's Assisted Living", "Bad Hair",
+    ],
   },
   {
     live: true,
@@ -264,6 +269,22 @@ async function fetchFeed(section: HomeSection): Promise<CatalogItem[]> {
  * instead of being a short, static list.
  */
 export async function fetchSection(section: HomeSection): Promise<CatalogItem[]> {
+  if (section.realTrending) return (await fetchMostTrending()).slice(0, 24);
+  if (section.rails?.length) {
+    const tabs = [...new Set(section.rails.map(([t]) => t))];
+    const byTab = new Map(await Promise.all(tabs.map(async (t) => [t, await fetchTabRows(t)] as const)));
+    const lanes = section.rails.map(([t, re]) =>
+      (byTab.get(t) ?? []).filter((r) => re.test(r.title)).flatMap((r) => r.items)
+        .filter((i) => !section.type || i.type === section.type),
+    );
+    const out: CatalogItem[] = [];
+    for (let i = 0; i < 30; i += 1) for (const l of lanes) if (l[i]) out.push(l[i]!);
+    return dedupe(out).slice(0, 24);
+  }
+  if (section.titles?.length && !section.keywords?.length) {
+    const found = await Promise.all(section.titles.map((t) => lookupTitle(t, section)));
+    return dedupe(found.filter((i): i is CatalogItem => !!i));
+  }
   if (section.live) {
     // Live rail: only what the catalog returns right now, newest releases first.
     const feed = await fetchFeed(section);
