@@ -25,6 +25,17 @@ export const API_PREFIX = "/wefeed-mobile-bff";
 export const TV_PREFIX = "/wefeed-tv-bff";
 const TV_HOSTS = ["https://tv.aoneroom.com"];
 
+/**
+ * Web BFF (movieboxhd.net). No request signature — the gateway only answers
+ * fully when the request carries the exact browser header set below, and it
+ * issues an anonymous Bearer token through the `x-user` response header.
+ * Playback goes through the media domain returned by /media-player/get-domain.
+ */
+export const WEB_PREFIX = "/wefeed-h5api-bff";
+const WEB_HOST = "https://h5-api.aoneroom.com";
+const WEB_REFERER =
+  "https://mzfi.me/spa/videoPlayPage/movies/x?id=0&detailSe=&detailEp=&lang=en&type=%2Fmovie%2Fdetail";
+
 const RETRY_STATUS = new Set([403, 406, 407, 408, 425, 429, 500, 502, 503, 504]);
 
 const encoder = new TextEncoder();
@@ -183,6 +194,115 @@ export async function tvRequest(
   return rawRequest("GET", path, undefined, TV_HOSTS);
 }
 
+/* ------------------------------------------------------------------------- *
+ * Web BFF layer
+ * ------------------------------------------------------------------------- */
+
+let webToken: string | null = null;
+let webInitPromise: Promise<void> | null = null;
+let mediaDomain: string | null = null;
+
+/** subjectId -> detailPath slug, captured whenever a subject passes through. */
+const detailPathCache = new Map<string, string>();
+function rememberDetailPath(subject: any) {
+  const id = subject?.subjectId ? String(subject.subjectId) : "";
+  const slug = typeof subject?.detailPath === "string" ? subject.detailPath : "";
+  if (id && slug) {
+    detailPathCache.set(id, slug);
+    if (detailPathCache.size > 2000) detailPathCache.delete(detailPathCache.keys().next().value!);
+  }
+}
+
+function webHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    accept: "application/json",
+    "accept-language": "en-US,en;q=0.9",
+    "content-type": "application/json",
+    "sec-ch-ua": '"Chromium";v="141", "Not?A_Brand";v="8"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "x-client-info": JSON.stringify({ timezone: "UTC" }),
+    "x-no-high-risk-restrict": "0",
+    "x-vip-restrict": "1",
+    "x-source": "",
+    referer: WEB_REFERER,
+  };
+  if (!isBrowser) {
+    headers["user-agent"] =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36";
+  }
+  if (webToken) headers["authorization"] = `Bearer ${webToken}`;
+  return headers;
+}
+
+async function webRaw(
+  method: "GET" | "POST",
+  path: string,
+  payload?: unknown,
+  host: string = WEB_HOST,
+): Promise<any> {
+  const res = await fetch(`${host}${WEB_PREFIX}${path}`, {
+    method,
+    headers: webHeaders(),
+    body: payload === undefined ? null : JSON.stringify(payload),
+  });
+  const xUser = res.headers.get("x-user");
+  if (xUser) {
+    try {
+      const token = JSON.parse(xUser)?.token;
+      if (typeof token === "string" && token) webToken = token;
+    } catch {
+      /* ignore malformed header */
+    }
+  }
+  if (!res.ok) throw new Error(`web ${res.status}`);
+  const json = (await res.json()) as any;
+  if (json && typeof json.code === "number" && json.code !== 0 && json.code !== 200)
+    throw new Error(`web code ${json.code}`);
+  return json?.data ?? json;
+}
+
+async function ensureWebToken() {
+  if (webToken) return;
+  if (!webInitPromise) {
+    webInitPromise = webRaw("GET", "/country-code")
+      .then(() => undefined)
+      .catch(() => undefined)
+      .finally(() => {
+        webInitPromise = null;
+      });
+  }
+  await webInitPromise;
+}
+
+export async function webRequest(
+  method: "GET" | "POST",
+  path: string,
+  payload?: unknown,
+  host?: string,
+): Promise<any> {
+  await ensureWebToken();
+  try {
+    return await webRaw(method, path, payload, host);
+  } catch {
+    webToken = null;
+    await ensureWebToken();
+    return webRaw(method, path, payload, host);
+  }
+}
+
+/** Media domain that serves subject/play (e.g. https://mzfi.me). */
+async function getMediaDomain(): Promise<string> {
+  if (mediaDomain) return mediaDomain;
+  const data = await webRequest("GET", "/media-player/get-domain").catch(() => null);
+  const url = typeof data === "string" && data.startsWith("https://") ? data.replace(/\/$/, "") : "";
+  mediaDomain = url || "https://mzfi.me";
+  return mediaDomain;
+}
+
 async function rawRequest(
   method: "GET" | "POST",
   path: string,
@@ -280,6 +400,7 @@ const cleanTitle = (raw: string) =>
 
 export function toItem(subject: any): CatalogItem | null {
   if (!subject?.subjectId || !subject?.title) return null;
+  rememberDetailPath(subject);
   return {
     id: String(subject.subjectId),
     title: cleanTitle(String(subject.title)),
@@ -479,9 +600,21 @@ async function mobileSearchSubjects(keyword: string, page = 1): Promise<any[]> {
   return (data?.results ?? []).flatMap((r: any) => r?.subjects ?? []);
 }
 
+/** Web BFF search (POST /subject/search) — the same search the website uses. */
+async function webSearchSubjects(keyword: string, page = 1): Promise<any[] | null> {
+  const data = await webRequest("POST", "/subject/search", {
+    keyword,
+    page,
+    perPage: 20,
+  }).catch(() => null);
+  return Array.isArray(data?.items) ? data.items : null;
+}
+
 export async function searchCatalog(keyword: string, page = 1) {
   const subjects =
-    (await tvSearchSubjects(keyword, page)) ?? (await mobileSearchSubjects(keyword, page));
+    (await webSearchSubjects(keyword, page)) ??
+    (await tvSearchSubjects(keyword, page)) ??
+    (await mobileSearchSubjects(keyword, page));
   const out: CatalogItem[] = [];
   const seen = new Set<string>();
   for (const subject of subjects) {
@@ -712,7 +845,89 @@ async function tvSources(
   return sources;
 }
 
+/**
+ * Web playback: GET {media-domain}/subject/play returns the same signed MP4
+ * files the website's player uses; captions come from /subject/caption with
+ * the stream id. Needs the title's detailPath slug (captured from search /
+ * home results); returns [] when the slug is unknown so callers fall back.
+ */
+async function webSources(
+  subjectId: string,
+  season: number,
+  episode: number,
+): Promise<StreamSource[]> {
+  const detailPath = detailPathCache.get(subjectId);
+  if (!detailPath) return [];
+  const { se, ep } = playIdentity(season, episode);
+  const host = await getMediaDomain().catch(() => "https://mzfi.me");
+  const info = await webRequest(
+    "GET",
+    `/subject/play?subjectId=${subjectId}&se=${se}&ep=${ep}&detailPath=${encodeURIComponent(
+      detailPath,
+    )}&streamSignType=1&supportCodecs%5Bh264%5D=1`,
+    undefined,
+    host,
+  ).catch(() => null);
+  let streams: any[] = Array.isArray(info?.streams) ? info.streams : [];
+  if (!streams.length) {
+    // Download endpoint lists the same files for some titles.
+    const dl = await webRequest(
+      "GET",
+      `/subject/download?subjectId=${subjectId}&se=${se}&ep=${ep}&detailPath=${encodeURIComponent(
+        detailPath,
+      )}`,
+    ).catch(() => null);
+    streams = Array.isArray(dl?.downloads) ? dl.downloads : [];
+  }
+  const found = new Map<string, StreamSource>();
+  for (const s of streams) {
+    const url = typeof s?.url === "string" ? s.url : "";
+    if (!url.startsWith("https://")) continue;
+    const fileKey = url.split("?")[0]!;
+    const resolution = parseInt(String(s?.resolutions ?? s?.resolution ?? ""), 10) || 0;
+    const prev = found.get(fileKey);
+    if (prev && prev.resolution >= resolution) continue;
+    const bytes = Number(s?.size) || 0;
+    found.set(fileKey, {
+      id: String(s?.id ?? fileKey.split("/").pop()?.replace(/\.\w+$/, "") ?? fileKey),
+      url,
+      resolution,
+      codec: s?.codecName ? String(s.codecName) : s?.codec ? String(s.codec) : null,
+      bytes,
+      size: fmtBytes(bytes),
+      promo: isPromoEntry(s),
+      captions: [],
+    });
+  }
+  const codecRank = (s: StreamSource) => (s.codec && /hevc|h265/i.test(s.codec) ? 1 : 0);
+  const sources = [...found.values()].sort(
+    (a, b) => codecRank(a) - codecRank(b) || b.resolution - a.resolution || b.bytes - a.bytes,
+  );
+  const streamId = streams.find((s: any) => s?.id)?.id;
+  if (sources.length && streamId) {
+    const data = await webRequest(
+      "GET",
+      `/subject/caption?format=MP4&id=${streamId}&subjectId=${subjectId}&detailPath=${encodeURIComponent(
+        detailPath,
+      )}`,
+    ).catch(() => null);
+    const seen = new Set<string>();
+    const captions = (Array.isArray(data?.captions) ? data.captions : [])
+      .filter((c: any) => typeof c?.url === "string" && c.url.startsWith("https://"))
+      .map((c: any) => ({
+        label: String(c.lanName ?? c.language ?? c.languageCode ?? "Subtitle"),
+        url: String(c.url),
+      }))
+      .filter((c: { label: string }) => (seen.has(c.label) ? false : (seen.add(c.label), true)));
+    for (const s of sources) s.captions = captions;
+  }
+  return sources;
+}
+
 export async function fetchSources(subjectId: string, season = 0, episode = 0) {
+  // Web playback first (the website's own player API); TV BFF as fallback.
+  const web = await webSources(subjectId, season, episode).catch(() => [] as StreamSource[]);
+  if (web.some((s) => !s.promo)) return web.filter((s) => !s.promo);
   let tv = await tvSources(subjectId, season, episode);
   if (!tv.some((s) => !s.promo)) {
     // One fresh retry before declaring a title unplayable.
