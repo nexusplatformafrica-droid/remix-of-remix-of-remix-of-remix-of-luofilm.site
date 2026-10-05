@@ -1,10 +1,11 @@
-import { usePawaPredict } from "@/hooks/usePawaPredict";
+import { useMomoNetwork } from "@/hooks/usePawaPredict";
+import { NetworkPicker } from "@/components/auth/NetworkPicker";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
-import { countryByCurrency, providerFromPhone } from "@/lib/countries";
+import { countryByCurrency } from "@/lib/countries";
 import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import type { Row } from "@/lib/fdb";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
@@ -51,7 +52,8 @@ function PayPage() {
 
   const [paypalBack, setPaypalBack] = useState(false);
   const country = countryByCurrency(String(tx?.currency ?? "UGX"));
-  const detected = usePawaPredict(phone, country?.dial, providerFromPhone(phone, country));
+  const network = useMomoNetwork(phone, country);
+  const detected = network.name;
 
   useEffect(() => {
     void getTx(id).then((row) => {
@@ -137,7 +139,7 @@ function PayPage() {
     setPhase("waiting");
     setStatus("Sending the payment request to your phone…");
     try {
-      await startMobileMoney(tx, phone);
+      await startMobileMoney(tx, phone, network.code);
       setStatus("Approve the prompt on your phone to finish.");
     } catch (err) {
       started.current = false;
@@ -221,6 +223,13 @@ function PayPage() {
                   placeholder="0770 123 456"
                   disabled={phase === "waiting"}
                   className="mt-1 h-11 w-full rounded-2xl bg-white px-4 text-sm outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-[oklch(0.82_0.1_65)]"
+                />
+                <NetworkPicker
+                  providers={network.providers}
+                  code={network.code}
+                  checking={network.checking}
+                  onChoose={network.choose}
+                  disabled={phase === "waiting"}
                 />
               </div>
             )}

@@ -50,8 +50,20 @@ function reject(r: any) {
     throw new Error(String(r?.failureReason?.failureMessage ?? "Payment was rejected"));
 }
 
-export async function deposit(input: { phone: string; amount: number; currency: string; reference: string; message?: string | undefined }) {
-  const p = await predictProvider(input.phone);
+/** Uses the network the customer confirmed; otherwise asks PawaPay to predict it. */
+async function resolveProvider(phone: string, provider?: string | undefined) {
+  if (provider && /^[A-Z0-9_]{3,40}$/.test(provider)) return { provider, phoneNumber: phone.replace(/[^0-9]/g, "") };
+  return predictProvider(phone);
+}
+
+export async function activeProviders(country: string) {
+  const r = await call(`/v2/active-conf?country=${encodeURIComponent(country)}&operationType=DEPOSIT`);
+  const c = (r?.countries ?? []).find((x: any) => x?.country === country);
+  return (c?.providers ?? []).map((p: any) => ({ provider: String(p.provider), displayName: String(p.displayName ?? p.provider), logo: p.logo ? String(p.logo) : "" }));
+}
+
+export async function deposit(input: { phone: string; amount: number; currency: string; reference: string; message?: string | undefined; provider?: string | undefined }) {
+  const p = await resolveProvider(input.phone, input.provider);
   const depositId = crypto.randomUUID();
   const r = await call("/v2/deposits", {
     method: "POST",
@@ -68,8 +80,8 @@ export async function deposit(input: { phone: string; amount: number; currency: 
   return { internal_reference: depositId, provider: p.provider, authorizationUrl: r?.authorizationUrl ?? null };
 }
 
-export async function payout(input: { phone: string; amount: number; currency: string; reference: string; message?: string | undefined }) {
-  const p = await predictProvider(input.phone);
+export async function payout(input: { phone: string; amount: number; currency: string; reference: string; message?: string | undefined; provider?: string | undefined }) {
+  const p = await resolveProvider(input.phone, input.provider);
   const payoutId = crypto.randomUUID();
   const r = await call("/v2/payouts", {
     method: "POST",

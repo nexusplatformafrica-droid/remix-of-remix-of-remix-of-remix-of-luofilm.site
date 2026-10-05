@@ -86,7 +86,7 @@ export async function createPaymentIntent(input: {
   return row;
 }
 
-export async function startMobileMoney(tx: Row, phone: string) {
+export async function startMobileMoney(tx: Row, phone: string, provider?: string | null) {
   // The phone number decides the country when it carries a country code,
   // otherwise the currency chosen at checkout does.
   const country = countryFromPhone(phone) ?? countryByCurrency(String(tx.currency ?? CURRENCY_CODE));
@@ -100,6 +100,7 @@ export async function startMobileMoney(tx: Row, phone: string) {
     currency: country.currency,
     reference: String(tx.reference),
     description: String(tx.note ?? "Subscription"),
+    provider: provider ?? undefined,
   });
   const internal = res?.internal_reference ?? res?.data?.internal_reference;
   if (!internal) throw new Error(res?.message ?? "The payment service did not start the request.");

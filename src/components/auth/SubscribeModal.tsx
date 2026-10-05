@@ -39,12 +39,12 @@ import {
   isValidFor,
   phoneFormat,
   priceNotice,
-  providerFromPhone,
 } from "@/lib/countries";
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
-import { usePawaPredict } from "@/hooks/usePawaPredict";
+import { useMomoNetwork } from "@/hooks/usePawaPredict";
+import { NetworkPicker } from "@/components/auth/NetworkPicker";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
@@ -132,7 +132,8 @@ export function SubscribeModal({
   const notice = priceNotice(localPrice, country);
   const [failOpen, setFailOpen] = useState(false);
   /** Provider guessed from the entered number, e.g. MTN MoMo. */
-  const detected = usePawaPredict(method === "mobile_money" ? phone : "", country?.dial, method === "mobile_money" ? providerFromPhone(phone, country) : null);
+  const network = useMomoNetwork(phone, country, method === "mobile_money");
+  const detected = network.name;
 
   useEffect(() => {
     if (!momo && method === "mobile_money") setMethod("card");
@@ -278,7 +279,7 @@ export function SubscribeModal({
         currency: country.currency,
         amount: localPrice,
       });
-      liveTx.current = await startMobileMoney(tx, phone);
+      liveTx.current = await startMobileMoney(tx, phone, network.code);
       setStatus("Approve the prompt on your phone to finish.");
 
     } catch (err) {
@@ -634,11 +635,13 @@ export function SubscribeModal({
                   <p className="mt-1 text-[10.5px] opacity-60">
                     Format: {phoneFormat(country)} ({country.localLength} digits after +{country.dial})
                   </p>
-                  {detected && (
-                    <p className="mt-0.5 text-[10.5px] font-semibold opacity-75">
-                      Provider detected: {detected}
-                    </p>
-                  )}
+                  <NetworkPicker
+                    providers={network.providers}
+                    code={network.code}
+                    checking={network.checking}
+                    onChoose={network.choose}
+                    disabled={phase === "waiting"}
+                  />
                 </div>
               )}
 
