@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
 import { Sidebar } from "@/components/youku/Sidebar";
 import { TopBar } from "@/components/youku/TopBar";
@@ -11,7 +11,7 @@ import { VjRail } from "@/components/youku/VjRail";
 import { ReferralBanner } from "@/components/youku/ReferralBanner";
 import { isAdultItem } from "@/lib/categories";
 import { ProviderTrending } from "@/components/providers/ProviderTrending";
-import { getHome, getTrending, getSection } from "@/lib/catalog.functions";
+import { getHome, getTrending } from "@/lib/catalog.functions";
 import { balanceTrending } from "@/lib/trending-filter";
 import type { CatalogItem } from "@/lib/moviebox";
 import { heroHref, loadHeroSlides } from "@/lib/hero";
