@@ -155,8 +155,8 @@ type ProviderRule = { name: string; prefixes: string[] };
 /** Prefix → provider map per country (national digits, leading 0 stripped). */
 const PROVIDER_PREFIXES: Record<string, ProviderRule[]> = {
   UG: [
-    { name: "MTN MoMo", prefixes: ["77", "78", "76", "39"] },
-    { name: "Airtel Money", prefixes: ["70", "74", "75"] },
+    { name: "MTN MoMo", prefixes: ["77", "78", "76", "79", "39", "31"] },
+    { name: "Airtel Money", prefixes: ["70", "74", "75", "20"] },
   ],
   KE: [{ name: "M-Pesa", prefixes: ["1", "7"] }],
   RW: [

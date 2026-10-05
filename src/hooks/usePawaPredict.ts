@@ -43,10 +43,17 @@ export function useMomoNetwork(phone: string, country: CountryInfo | null | unde
   const complete = enabled && !!dial && digits.length === localLength;
   const msisdn = complete ? dial + digits : "";
 
+  // The national numbering plan is authoritative for the number's network; PawaPay's
+  // prediction is only asked when the prefix isn't known (it mislabels many MTN numbers).
+  const sameBrand = (a: string, b: string) => a.split(/[\s-]/)[0]!.toLowerCase() === b.split(/[\s-]/)[0]!.toLowerCase();
+  const guess = complete && country ? providerFromPhone(digits, country) : null;
+  const local = guess ? providers.find((p) => sameBrand(brandOf(p.provider) ?? "", guess))?.provider ?? null : null;
+  const needRemote = !!msisdn && !guess;
+
   const [result, setResult] = useState<{ msisdn: string; code: string | null } | null>(null);
 
   useEffect(() => {
-    if (!msisdn) return;
+    if (!needRemote) return;
     if (cache.has(msisdn)) {
       setResult({ msisdn, code: cache.get(msisdn) ?? null });
       return;
@@ -62,16 +69,13 @@ export function useMomoNetwork(phone: string, country: CountryInfo | null | unde
       alive = false;
       clearTimeout(t);
     };
-  }, [msisdn]);
+  }, [msisdn, needRemote]);
 
   const settled = result && result.msisdn === msisdn ? result : null;
-  const checking = complete && !settled;
-  let code = settled?.code ?? null;
-  // PawaPay unreachable: use the local prefix guess so the button still names a network.
-  if (settled && !code && country) {
-    const guess = providerFromPhone(digits, country);
-    code = providers.find((p) => brandOf(p.provider) === guess)?.provider ?? null;
-  }
+  // Waiting for the network list (to map the prefix) or for PawaPay's answer.
+  const checking = complete && (guess ? providers.length === 0 && !local : !settled);
+  const code = guess ? local : settled?.code ?? null;
+  const name = guess && !local ? guess : code ? brandOf(code) : null;
   const logo = code ? providers.find((p) => p.provider === code)?.logo ?? "" : "";
-  return { code: complete ? code : null, name: complete && code ? brandOf(code) : null, logo: complete ? logo : "", checking };
+  return { code: complete ? code : null, name: complete ? name : null, logo: complete ? logo : "", checking };
 }
