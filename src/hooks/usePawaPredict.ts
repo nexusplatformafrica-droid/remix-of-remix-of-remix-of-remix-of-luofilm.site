@@ -15,7 +15,7 @@ function brand(code: string): string | null {
   if (c.startsWith("ZAMTEL")) return "Zamtel";
   if (c.startsWith("AFRICELL")) return "Africell";
   if (c.startsWith("WAVE")) return "Wave";
-  return code ? code.split("_")[0] : null;
+  return code ? (code.split("_")[0] ?? null) : null;
 }
 
 /** Asks PawaPay which network a number belongs to (debounced); falls back to the local prefix guess. */
