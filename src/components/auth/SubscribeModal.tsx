@@ -2,7 +2,6 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react"
 
 const WhopEmbed = lazy(() => import("@/components/auth/WhopEmbed"));
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   BadgeCheck,
@@ -46,8 +45,7 @@ import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
-import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo, PaymentButtonSkeleton } from "@/components/auth/PaymentLogos";
-import { pawaPredictProvider } from "@/lib/pawapay.functions";
+import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
 
 const TAGS: Record<string, string> = { daily: "Try it", "s-monthly": "Popular" };
 
@@ -58,7 +56,7 @@ const PERKS = [
   { icon: Ban, label: "No ads" },
 ];
 
-type Phase = "idle" | "card" | "waiting" | "done" | "failed";
+type Phase = "idle" | "phone" | "card" | "waiting" | "done" | "failed";
 
 type ModalMethod = "mobile_money" | "card" | "google_pay" | "apple_pay" | "paypal";
 
@@ -91,9 +89,6 @@ export function SubscribeModal({
   const [method, setMethod] = useState<ModalMethod>("mobile_money");
   const [whopUrl, setWhopUrl] = useState("");
   const [cardSession, setCardSession] = useState("");
-  const [detectedProvider, setDetectedProvider] = useState("");
-  const [detectingProvider, setDetectingProvider] = useState(false);
-  const predictProvider = useServerFn(pawaPredictProvider);
   const geoQ = useQuery({
     queryKey: ["visitor-geo"],
     queryFn: () => detectVisitorGeo(),
@@ -143,29 +138,6 @@ export function SubscribeModal({
     if (!profile?.phone || phone) return;
     setPhone(String(profile.phone));
   }, [profile, phone]);
-
-  useEffect(() => {
-    setDetectedProvider("");
-    if (method !== "mobile_money" || !isValidFor(phone, country)) {
-      setDetectingProvider(false);
-      return;
-    }
-    let cancelled = false;
-    setDetectingProvider(true);
-    const timer = window.setTimeout(() => {
-      void predictProvider({ data: { phone: `+${country.dial}${phone.replace(/[^0-9]/g, "").replace(new RegExp(`^${country.dial}`), "")}` } })
-        .then((result) => {
-          if (!cancelled) setDetectedProvider(result.ok ? result.provider : "");
-        })
-        .finally(() => {
-          if (!cancelled) setDetectingProvider(false);
-        });
-    }, 450);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [phone, country, method, predictProvider]);
 
   /** Mints a scannable pay-on-another-device link for the selected plan. */
   const mintLink = useCallback(async () => {
@@ -621,7 +593,7 @@ export function SubscribeModal({
               )}
 
 
-              {method === "mobile_money" && phase !== "done" && (
+              {phase === "phone" && (
                 <div className="mt-2 sm:mt-4">
                   <label className="text-[11px] font-semibold opacity-70">
                     <img
@@ -657,21 +629,6 @@ export function SubscribeModal({
                   <p className="mt-1 text-[10.5px] opacity-60">
                     Format: {phoneFormat(country)} ({country.localLength} digits after +{country.dial})
                   </p>
-                  {(detectingProvider || detectedProvider) && (
-                    <div className="mt-2 flex h-7 items-center gap-2 text-[11px] font-semibold">
-                      {detectingProvider ? (
-                        <>
-                          <span className="size-4 animate-pulse rounded bg-foreground/10" />
-                          <span className="h-2.5 w-24 animate-pulse rounded bg-foreground/10" />
-                        </>
-                      ) : (
-                        <>
-                          <MobileMoneyLogo providers={[detectedProvider]} />
-                          <span>{detectedProvider.replaceAll("_", " ")}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -708,7 +665,7 @@ export function SubscribeModal({
                 />
               )}
               {method === "card" && cardSession && phase === "card" && (
-                <Suspense fallback={<PaymentButtonSkeleton />}>
+                <Suspense fallback={<Loader2 className="mx-auto size-5 animate-spin opacity-60" />}>
                   <div>
                     <WhopEmbed
                       sessionId={cardSession}
@@ -721,36 +678,32 @@ export function SubscribeModal({
                 </Suspense>
               )}
               {method === "card" && phase === "waiting" && !cardSession && (
-                <PaymentButtonSkeleton />
+                <Loader2 className="mx-auto size-5 animate-spin opacity-60" />
               )}
-              {method === "paypal" && !paypalTx && phase !== "failed" && phase !== "done" && (
-                <PaymentButtonSkeleton />
-              )}
-              {method !== "paypal" && method !== "card" && phase === "waiting" && <PaymentButtonSkeleton />}
-              {method !== "paypal" && (method !== "card" || phase === "failed") && phase !== "waiting" && <button
+              {method !== "paypal" && (method !== "card" || phase === "failed") && <button
                 type="button"
-                disabled={phase === "done" || (method === "mobile_money" && (!detectedProvider || detectingProvider))}
+                disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
                   if (phase === "idle" || phase === "failed") {
-                    if (method === "mobile_money") void pay();
+                    if (method === "mobile_money") setPhase("phone");
                     else void payCard();
-                  }
+                  } else if (phase === "phone") void pay();
                 }}
                 className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[14px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60 sm:h-12 sm:text-[15px]"
               >
-                {method === "mobile_money" && <Smartphone className="size-4" />}
-                {phase === "done"
+                {phase === "phone" && <Smartphone className="size-4" />}
+                {phase === "waiting"
+                  ? "Waiting for payment…"
+                  : phase === "done"
                     ? "Activated"
                     : phase === "card"
                       ? "Waiting for card payment…"
-                      : phase === "failed"
+                      : phase === "phone"
+                        ? "Send payment request"
+                        : phase === "failed"
                           ? "Try again"
                           : method === "mobile_money"
-                            ? detectingProvider
-                              ? "Checking network…"
-                              : detectedProvider
-                                ? <><span>Pay with</span><MobileMoneyLogo providers={[detectedProvider]} /></>
-                                : "Enter your mobile money number"
+                            ? "Continue to Pay"
                             : `Pay with ${METHODS.find((m) => m.id === method)?.label}`}
               </button>}
               <p className="mt-2 text-center text-[9.5px] opacity-55 sm:mt-3 sm:text-[10px]">
@@ -768,7 +721,7 @@ export function SubscribeModal({
         message={status}
         onRetry={() => {
           setFailOpen(false);
-          setPhase("idle");
+          setPhase("phone");
           setStatus("");
         }}
       />

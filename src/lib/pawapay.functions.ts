@@ -50,21 +50,3 @@ export const pawaBalances = createServerFn({ method: "GET" }).handler(async () =
     return { ok: false as const, balances: [] as { country: string; currency: string; balance: number }[] };
   }
 });
-
-/** Detects the buyer's mobile-money network before a deposit is created. */
-export const pawaPredictProvider = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ phone: z.string().min(6).max(20) }).parse(d))
-  .handler(async ({ data }) => {
-    const { predictProvider } = await import("./pawapay.server");
-    try {
-      return { ok: true as const, ...(await predictProvider(data.phone)), message: "" };
-    } catch (e) {
-      return {
-        ok: false as const,
-        provider: null,
-        phoneNumber: null,
-        country: null,
-        message: e instanceof Error ? e.message : "Could not detect this network",
-      };
-    }
-  });
