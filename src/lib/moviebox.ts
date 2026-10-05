@@ -400,6 +400,7 @@ const cleanTitle = (raw: string) =>
 
 export function toItem(subject: any): CatalogItem | null {
   if (!subject?.subjectId || !subject?.title) return null;
+  rememberDetailPath(subject);
   return {
     id: String(subject.subjectId),
     title: cleanTitle(String(subject.title)),
