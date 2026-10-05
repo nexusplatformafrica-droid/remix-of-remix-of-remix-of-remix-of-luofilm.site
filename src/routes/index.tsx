@@ -14,6 +14,7 @@ import { ProviderTrending } from "@/components/providers/ProviderTrending";
 import { getHome, getTrending, getSection } from "@/lib/catalog.functions";
 import { balanceTrending } from "@/lib/trending-filter";
 import { HOME_SECTIONS } from "@/lib/home-sections";
+import type { CatalogItem } from "@/lib/moviebox";
 import { heroHref, loadHeroSlides } from "@/lib/hero";
 
 type HeroCard = { id: string; title: string; image: string | null; watchId?: string | undefined; href: string; vj?: string | null | undefined; promo: boolean; meta: string };
@@ -331,9 +332,6 @@ function HomePage() {
           {!rails.some((r) => r.title === "Gangster") && !!comingSoon.length && (
             <Rail title="Coming Soon" items={comingSoon} />
           )}
-          {extraRows.map((row) => (
-            <Rail key={row.title} title={cleanTitle(row.title)} items={clean(row.items)} />
-          ))}
         </main>
 
       </div>
