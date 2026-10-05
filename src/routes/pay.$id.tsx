@@ -278,13 +278,10 @@ function PayPage() {
               <button
                 type="button"
                 onClick={() => void openWhop()}
-                disabled={phase === "waiting"}
                 className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[15px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60"
               >
                 <CreditCard className="size-4" />
-                {phase === "waiting"
-                  ? "Loading secure form…"
-                  : method === "google_pay"
+                {method === "google_pay"
                     ? "Pay with Google Pay"
                     : method === "apple_pay"
                       ? "Pay with Apple Pay"
