@@ -12,7 +12,6 @@ import {
   Loader2,
   MonitorPlay,
   QrCode,
-  Smartphone,
   Sparkles,
   Wallet,
 } from "lucide-react";
@@ -40,9 +39,11 @@ import {
   isValidFor,
   phoneFormat,
   priceNotice,
+  providerFromPhone,
 } from "@/lib/countries";
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
+import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
@@ -129,6 +130,8 @@ export function SubscribeModal({
   const localPrice = convertPrice(plan.price, country);
   const notice = priceNotice(localPrice, country);
   const [failOpen, setFailOpen] = useState(false);
+  /** Provider guessed from the entered number, e.g. MTN MoMo. */
+  const detected = method === "mobile_money" ? providerFromPhone(phone, country) : null;
 
   useEffect(() => {
     if (!momo && method === "mobile_money") setMethod("card");
@@ -593,7 +596,7 @@ export function SubscribeModal({
               )}
 
 
-              {phase === "phone" && (
+              {method === "mobile_money" && phase !== "done" && (
                 <div className="mt-2 sm:mt-4">
                   <label className="text-[11px] font-semibold opacity-70">
                     <img
@@ -622,6 +625,7 @@ export function SubscribeModal({
                         setPhone(d.slice(0, country.localLength));
                       }}
                       inputMode="tel"
+                      disabled={phase === "waiting"}
                       placeholder={phoneFormat(country).replace(`+${country.dial} `, "")}
                       className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
                     />
@@ -629,6 +633,11 @@ export function SubscribeModal({
                   <p className="mt-1 text-[10.5px] opacity-60">
                     Format: {phoneFormat(country)} ({country.localLength} digits after +{country.dial})
                   </p>
+                  {detected && (
+                    <p className="mt-0.5 text-[10.5px] font-semibold opacity-75">
+                      Provider detected: {detected}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -684,27 +693,23 @@ export function SubscribeModal({
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
-                  if (phase === "idle" || phase === "failed") {
-                    if (method === "mobile_money") setPhase("phone");
-                    else void payCard();
-                  } else if (phase === "phone") void pay();
+                  if (method === "mobile_money") {
+                    if (phase === "idle" || phase === "failed" || phase === "phone") void pay();
+                  } else if (phase === "idle" || phase === "failed") void payCard();
                 }}
                 className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[14px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60 sm:h-12 sm:text-[15px]"
               >
-                {phase === "phone" && <Smartphone className="size-4" />}
                 {phase === "waiting"
                   ? "Waiting for payment…"
                   : phase === "done"
                     ? "Activated"
-                    : phase === "card"
-                      ? "Waiting for card payment…"
-                      : phase === "phone"
-                        ? "Send payment request"
+                    : method === "mobile_money"
+                      ? <ProviderPayLabel name={detected} />
+                      : phase === "card"
+                        ? "Waiting for card payment…"
                         : phase === "failed"
                           ? "Try again"
-                          : method === "mobile_money"
-                            ? "Continue to Pay"
-                            : `Pay with ${METHODS.find((m) => m.id === method)?.label}`}
+                          : `Pay with ${METHODS.find((m) => m.id === method)?.label}`}
               </button>}
               <p className="mt-2 text-center text-[9.5px] opacity-55 sm:mt-3 sm:text-[10px]">
                 By continuing you agree to the Membership Agreement.
@@ -721,7 +726,7 @@ export function SubscribeModal({
         message={status}
         onRetry={() => {
           setFailOpen(false);
-          setPhase("phone");
+          setPhase("idle");
           setStatus("");
         }}
       />

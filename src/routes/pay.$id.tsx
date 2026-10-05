@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
+import { countryByCurrency, providerFromPhone } from "@/lib/countries";
+import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import type { Row } from "@/lib/fdb";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { lazy, Suspense } from "react";
@@ -47,6 +49,8 @@ function PayPage() {
   const started = useRef(false);
 
   const [paypalBack, setPaypalBack] = useState(false);
+  const country = countryByCurrency(String(tx?.currency ?? "UGX"));
+  const detected = providerFromPhone(phone, country);
 
   useEffect(() => {
     void getTx(id).then((row) => {
@@ -235,8 +239,7 @@ function PayPage() {
                 disabled={phase === "waiting"}
                 className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[15px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60"
               >
-                <Smartphone className="size-4" />
-                {phase === "waiting" ? "Waiting for approval…" : "Send payment request"}
+                {phase === "waiting" ? "Waiting for approval…" : <ProviderPayLabel name={detected} />}
               </button>
             )}
 
