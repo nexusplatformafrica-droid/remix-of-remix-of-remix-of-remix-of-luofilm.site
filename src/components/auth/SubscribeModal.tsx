@@ -42,9 +42,8 @@ import {
 } from "@/lib/countries";
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
-import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import { useMomoNetwork } from "@/hooks/usePawaPredict";
-import { NetworkPicker } from "@/components/auth/NetworkPicker";
+import { MomoPayButton } from "@/components/auth/MomoPayButton";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
@@ -635,13 +634,6 @@ export function SubscribeModal({
                   <p className="mt-1 text-[10.5px] opacity-60">
                     Format: {phoneFormat(country)} ({country.localLength} digits after +{country.dial})
                   </p>
-                  <NetworkPicker
-                    providers={network.providers}
-                    code={network.code}
-                    checking={network.checking}
-                    onChoose={network.choose}
-                    disabled={phase === "waiting"}
-                  />
                 </div>
               )}
 
@@ -693,13 +685,22 @@ export function SubscribeModal({
               {method === "card" && phase === "waiting" && !cardSession && (
                 <Loader2 className="mx-auto size-5 animate-spin opacity-60" />
               )}
-              {method !== "paypal" && (method !== "card" || phase === "failed") && <button
+              {method === "mobile_money" ? (
+                <MomoPayButton
+                  name={detected}
+                  logo={network.logo}
+                  checking={network.checking && phase !== "waiting"}
+                  label={phase === "waiting" ? "Waiting for payment…" : phase === "done" ? "Activated" : phase === "failed" ? "Try again" : null}
+                  disabled={phase === "waiting" || phase === "done"}
+                  onClick={() => {
+                    if (phase === "idle" || phase === "failed" || phase === "phone") void pay();
+                  }}
+                />
+              ) : method !== "paypal" && (method !== "card" || phase === "failed") && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {
-                  if (method === "mobile_money") {
-                    if (phase === "idle" || phase === "failed" || phase === "phone") void pay();
-                  } else if (phase === "idle" || phase === "failed") void payCard();
+                  if (phase === "idle" || phase === "failed") void payCard();
                 }}
                 className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[14px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60 sm:h-12 sm:text-[15px]"
               >
@@ -707,9 +708,7 @@ export function SubscribeModal({
                   ? "Waiting for payment…"
                   : phase === "done"
                     ? "Activated"
-                    : method === "mobile_money"
-                      ? <ProviderPayLabel name={detected} />
-                      : phase === "card"
+                    : phase === "card"
                         ? "Waiting for card payment…"
                         : phase === "failed"
                           ? "Try again"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { pawaPredict, pawaProviders } from "@/lib/pawapay.functions";
-import type { CountryInfo } from "@/lib/countries";
+import { providerFromPhone, type CountryInfo } from "@/lib/countries";
 
 /** Maps PawaPay provider codes (e.g. MTN_MOMO_UGA) to brand names used by ProviderPayLabel. */
 export function brandOf(code: string): string | null {
@@ -20,13 +20,16 @@ export function brandOf(code: string): string | null {
   return code ? (code.split("_")[0] ?? null) : null;
 }
 
+const cache = new Map<string, string | null>();
+
 /**
- * Mobile money network for a number: PawaPay's live networks for the country,
- * PawaPay's prediction once the number is complete, and a manual override the
- * customer can tap when their number was moved to another network.
+ * Mobile money network for a number: asks PawaPay once the number is complete,
+ * remembers the answer, and falls back to the local prefix guess if PawaPay is unreachable.
  */
 export function useMomoNetwork(phone: string, country: CountryInfo | null | undefined, enabled = true) {
   const iso3 = country?.iso3 ?? "";
+  const dial = country?.dial ?? "";
+  const localLength = country?.localLength ?? 0;
   const { data: providers = [] } = useQuery({
     queryKey: ["pawa-providers", iso3],
     queryFn: () => pawaProviders({ data: { country: iso3 } }),
@@ -34,40 +37,41 @@ export function useMomoNetwork(phone: string, country: CountryInfo | null | unde
     staleTime: 30 * 60_000,
   });
 
-  const [predicted, setPredicted] = useState<string | null>(null);
-  const [override, setOverride] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
+  let digits = phone.replace(/\D/g, "");
+  if (dial && digits.startsWith(dial) && digits.length > localLength) digits = digits.slice(dial.length);
+  digits = digits.replace(/^0+/, "");
+  const complete = enabled && !!dial && digits.length === localLength;
+  const msisdn = complete ? dial + digits : "";
+
+  const [result, setResult] = useState<{ msisdn: string; code: string | null } | null>(null);
 
   useEffect(() => {
-    setPredicted(null);
-    setOverride(null);
-    if (!enabled || !country) return;
-    let digits = phone.replace(/\D/g, "");
-    if (digits.startsWith(country.dial) && digits.length > country.localLength) digits = digits.slice(country.dial.length);
-    digits = digits.replace(/^0+/, "");
-    // Only ask PawaPay once the number is complete — partial numbers predict the wrong network.
-    if (digits.length !== country.localLength) return;
+    if (!msisdn) return;
+    if (cache.has(msisdn)) {
+      setResult({ msisdn, code: cache.get(msisdn) ?? null });
+      return;
+    }
     let alive = true;
-    setChecking(true);
     const t = setTimeout(async () => {
-      const r = await pawaPredict({ data: { phone: country.dial + digits } }).catch(() => null);
-      if (!alive) return;
-      setChecking(false);
-      if (r?.ok && r.provider) setPredicted(r.provider);
-    }, 300);
+      const r = await pawaPredict({ data: { phone: msisdn } }).catch(() => null);
+      const code = r?.ok && r.provider ? r.provider : null;
+      cache.set(msisdn, code);
+      if (alive) setResult({ msisdn, code });
+    }, 250);
     return () => {
       alive = false;
       clearTimeout(t);
-      setChecking(false);
     };
-  }, [phone, country, enabled]);
+  }, [msisdn]);
 
-  const code = override ?? predicted;
-  return {
-    providers,
-    code,
-    name: code ? brandOf(code) : null,
-    checking,
-    choose: setOverride,
-  };
+  const settled = result && result.msisdn === msisdn ? result : null;
+  const checking = complete && !settled;
+  let code = settled?.code ?? null;
+  // PawaPay unreachable: use the local prefix guess so the button still names a network.
+  if (settled && !code && country) {
+    const guess = providerFromPhone(digits, country);
+    code = providers.find((p) => brandOf(p.provider) === guess)?.provider ?? null;
+  }
+  const logo = code ? providers.find((p) => p.provider === code)?.logo ?? "" : "";
+  return { code: complete ? code : null, name: complete && code ? brandOf(code) : null, logo: complete ? logo : "", checking };
 }
