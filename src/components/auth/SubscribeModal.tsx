@@ -43,7 +43,7 @@ import {
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { useMomoNetwork } from "@/hooks/usePawaPredict";
-import { MomoPayButton } from "@/components/auth/MomoPayButton";
+import { MomoPayButton, momoFailState } from "@/components/auth/MomoPayButton";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
@@ -690,8 +690,7 @@ export function SubscribeModal({
                   name={detected}
                   logo={network.logo}
                   checking={network.checking && phase !== "waiting"}
-                  label={phase === "waiting" ? "Waiting for payment…" : phase === "done" ? "Activated" : phase === "failed" ? "Try again" : null}
-                  disabled={phase === "waiting" || phase === "done"}
+                  state={phase === "waiting" ? "waiting" : phase === "done" ? "success" : phase === "failed" ? momoFailState(status) : "idle"}
                   onClick={() => {
                     if (phase === "idle" || phase === "failed" || phase === "phone") void pay();
                   }}
