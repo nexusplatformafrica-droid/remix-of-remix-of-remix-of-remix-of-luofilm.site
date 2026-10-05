@@ -11,7 +11,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { db as supabase } from "@/lib/db";
 import { fdb } from "@/lib/fdb";
 import { listAllEpisodes, listLuoTitles, type LuoLanguage } from "@/lib/luo";
-import markAsset from "@/assets/luofilm-mark.png";
+import logoAsset from "@/assets/moviemax-logo.png.asset.json";
 
 /** Floating glass pill nav: LUO · LUGANDA · SUBSCRIBE · LOGIN */
 export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
@@ -56,14 +56,11 @@ export function FloatNav({ onSearch }: { onSearch?: () => void } = {}) {
       <div className="search-glow min-w-0 max-w-[calc(100vw-1rem)] shrink rounded-full p-[1.5px] lg:max-w-none lg:shrink-0">
       <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-full bg-background/85 p-1 shadow-lg backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-visible">
         {/* Brand stays inside the floating navigation on every screen. */}
-        <Link to="/" className="flex shrink-0 items-center gap-1.5 pl-1.5 pr-1">
-          <img src={markAsset} alt="MOVIE MAX logo" className="h-5 w-auto sm:h-6" />
-          <span className="whitespace-nowrap font-[Bebas_Neue,system-ui,sans-serif] text-[13px] leading-none tracking-wide sm:text-[15px]">
-            <span className="bg-gradient-to-r from-[#00EAFF] to-[#5CFF00] bg-clip-text text-transparent">
-              MOVIE MAX
-            </span>
-            <span className="text-[#C822FF]">.SITE</span>
-          </span>
+         <Link to="/" aria-label="MOVIEMAX home" className="flex shrink-0 items-center gap-1 pl-1 pr-1 sm:gap-1.5">
+           <img src={logoAsset.url} alt="" className="size-7 shrink-0 object-contain sm:size-8" />
+           <span className="brand-logo-text whitespace-nowrap text-[12px] font-extrabold leading-none sm:text-[15px]">
+             MOVIEMAX
+           </span>
         </Link>
         <Link
           to="/"

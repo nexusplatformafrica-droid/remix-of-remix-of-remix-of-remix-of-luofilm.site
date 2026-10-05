@@ -1,5 +1,5 @@
 /**
- * Branded MOVIE MAX notification email.
+ * Branded MOVIEMAX notification email.
  *
  * Pure string builder so the admin dashboard can preview the exact HTML that
  * the server sends. Colours mirror the site theme (dark surface + magenta
@@ -85,7 +85,7 @@ function recRow(recs: NotifyContent[]) {
     })
     .join("");
 
-  return `<div style="font:800 15px/1 Helvetica,Arial,sans-serif;letter-spacing:1.5px;color:${GOLD};margin:30px 0 14px;">MORE ON MOVIE MAX</div>
+  return `<div style="font:800 15px/1 Helvetica,Arial,sans-serif;letter-spacing:1.5px;color:${GOLD};margin:30px 0 14px;">MORE ON MOVIEMAX</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table>`;
 }
 
@@ -125,7 +125,7 @@ const chip = (href: string, label: string, bg: string, color: string) =>
 
 function socialBlock(c?: NotifyContent | null) {
   const url = c?.link || SITE_URL;
-  const text = c ? `${c.title}${c.episode ? ` — ${c.episode}` : ""} on MOVIE MAX` : "MOVIE MAX";
+  const text = c ? `${c.title}${c.episode ? ` — ${c.episode}` : ""} on MOVIEMAX` : "MOVIEMAX";
 
   const share = shareLinks(url, text)
     .map((s) => chip(s.href, s.label, "#22252f", MUTED))
@@ -140,7 +140,7 @@ function socialBlock(c?: NotifyContent | null) {
       </div>
       <div style="font:700 11px/1 Helvetica,Arial,sans-serif;letter-spacing:1.4px;color:${GOLD};margin:6px 0 8px;">SHARE THIS</div>
       <div>${share}</div>
-      <div style="font:700 11px/1 Helvetica,Arial,sans-serif;letter-spacing:1.4px;color:${GOLD};margin:16px 0 8px;">FOLLOW MOVIE MAX</div>
+       <div style="font:700 11px/1 Helvetica,Arial,sans-serif;letter-spacing:1.4px;color:${GOLD};margin:16px 0 8px;">FOLLOW MOVIEMAX</div>
       <div>${follow}</div>
     </td></tr>
   </table>`;
@@ -175,8 +175,8 @@ export function renderNotifyEmail(opts: {
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#171921;border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
         <tr><td class="lf-header" style="padding:30px 28px;" align="center">
-          <img src="${SITE_LOGO_URL}" width="54" alt="MOVIE MAX" style="display:block;width:54px;height:54px;border-radius:14px;margin:0 auto 12px;" />
-          <div style="font:800 26px/1 Helvetica,Arial,sans-serif;letter-spacing:3px;color:${GOLD};">MOVIE MAX<span style="color:#ffffff;">.SITE</span></div>
+           <img src="${SITE_LOGO_URL}" width="54" alt="MOVIEMAX" style="display:block;width:54px;height:54px;margin:0 auto 12px;" />
+           <div style="font:800 26px/1 Aeonik,Helvetica,Arial,sans-serif;background:linear-gradient(105deg,#3dbaf5,#5050e8,#a12bf0);-webkit-background-clip:text;background-clip:text;color:#7b65ef;">MOVIEMAX</div>
           <div style="font:400 12px/1.5 Helvetica,Arial,sans-serif;color:rgba(255,255,255,.75);margin-top:8px;letter-spacing:1px;">FREE LUO &amp; LUGANDA TRANSLATED MOVIES</div>
         </td></tr>
         <tr><td style="padding:26px 28px 30px;">
@@ -188,7 +188,7 @@ export function renderNotifyEmail(opts: {
 
           <p style="font:400 12px/1.6 Helvetica,Arial,sans-serif;color:#7d8190;margin:28px 0 0;border-top:1px solid rgba(255,255,255,.08);padding-top:18px;">
             With love,<br/><b style="color:${GOLD};">— The Luo Film Team</b><br/><br/>
-            You get this because you have an account on <a href="${SITE_URL}" style="color:${GOLD};text-decoration:none;">MOVIE MAX</a>.
+             You get this because you have an account on <a href="${SITE_URL}" style="color:${GOLD};text-decoration:none;">MOVIEMAX</a>.
           </p>
         </td></tr>
       </table>

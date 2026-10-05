@@ -19,6 +19,7 @@
  */
 
 @theme inline {
+  --font-sans: "Aeonik", "Barlow", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -97,6 +98,7 @@
   --hot: oklch(0.6 0.23 25);
   --hot-foreground: oklch(0.99 0 0);
   --sidebar-w: 56px;
+  --brand-logo-gradient: linear-gradient(105deg, oklch(0.73 0.19 242), oklch(0.56 0.26 276), oklch(0.64 0.26 308));
   --gradient-vip: linear-gradient(100deg, oklch(0.88 0.13 92), oklch(0.78 0.15 72));
   --gradient-hot: linear-gradient(135deg, oklch(0.6 0.23 25), oklch(0.62 0.22 12));
   --gradient-hero-fade: linear-gradient(
@@ -168,10 +170,16 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family:
-      "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui,
-      sans-serif;
+    font-family: "Aeonik", "Barlow", system-ui, sans-serif;
   }
+}
+
+.brand-logo-text {
+  font-family: "Aeonik", "Barlow", system-ui, sans-serif;
+  background-image: var(--brand-logo-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 @layer base {

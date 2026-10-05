@@ -49,17 +49,17 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "MOVIE MAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo Translated Movies and Lugandan Translated Movies",
+           "MOVIEMAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo Translated Movies and Lugandan Translated Movies",
       },
       {
         name: "description",
         content:
-          "MOVIE MAX — watch and download free movies, series, animations and episodes with multiple subtitles, plus Luo translated movies and Lugandan translated movies in HD.",
+           "MOVIEMAX — watch and download free movies, series, animations and episodes with multiple subtitles, plus Luo translated movies and Lugandan translated movies in HD.",
       },
       {
         property: "og:title",
         content:
-          "MOVIE MAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo & Lugandan Translated Movies",
+           "MOVIEMAX — Watch and Download Free Movies, Series, Animations, Episodes with Multiple Subtitles, Luo & Lugandan Translated Movies",
       },
       {
         property: "og:description",

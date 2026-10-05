@@ -101,8 +101,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MOVIE MAX — Stream Movies and Series" },
-      { name: "description", content: "Stream movies and TV series in a built-in web player on MOVIE MAX." },
+      { title: "MOVIEMAX — Stream Movies and Series" },
+      { name: "description", content: "Stream movies and TV series in a built-in web player on MOVIEMAX." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
