@@ -267,7 +267,14 @@ function PayPage() {
               />
             )}
 
-            {phase !== "done" && isWallet && !whopUrl && (
+            {phase !== "done" && isWallet && !whopUrl && phase === "waiting" && (
+              <div className="mt-5 flex h-12 w-full animate-pulse items-center justify-center gap-2 rounded-full bg-[oklch(0.92_0.04_80)]">
+                <CreditCard className="size-4 opacity-40" />
+                <div className="h-3 w-32 rounded-full bg-[oklch(0.85_0.06_75)]" />
+              </div>
+            )}
+
+            {phase !== "done" && isWallet && !whopUrl && phase !== "waiting" && (
               <button
                 type="button"
                 onClick={() => void openWhop()}
