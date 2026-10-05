@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
 import { Sidebar } from "@/components/youku/Sidebar";
 import { TopBar } from "@/components/youku/TopBar";
@@ -11,9 +11,8 @@ import { VjRail } from "@/components/youku/VjRail";
 import { ReferralBanner } from "@/components/youku/ReferralBanner";
 import { isAdultItem } from "@/lib/categories";
 import { ProviderTrending } from "@/components/providers/ProviderTrending";
-import { getHome, getTrending, getSection } from "@/lib/catalog.functions";
+import { getHome, getTrending } from "@/lib/catalog.functions";
 import { balanceTrending } from "@/lib/trending-filter";
-import { HOME_SECTIONS } from "@/lib/home-sections";
 import type { CatalogItem } from "@/lib/moviebox";
 import { heroHref, loadHeroSlides } from "@/lib/hero";
 
@@ -174,28 +173,9 @@ function HomePage() {
     t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2B00}-\u{2BFF}]/gu, "").trim();
   const clean = <T extends { title: string; genre?: string | null }>(items: T[]) =>
     items.filter((i) => !isAdultItem(i));
-  // The website's own home sections are used when available; the curated
-  // search-built sections are only a fallback when the web home is down.
-  const useWeb = !!data?.web;
-  const sectionQueries = useQueries({
-    queries: HOME_SECTIONS.map((section) =>
-      queryOptions({
-        queryKey: ["home-section", section.title],
-        queryFn: () => getSection({ data: { title: section.title } }),
-        enabled: !!data && !useWeb,
-        staleTime: 30 * 1000,
-        refetchInterval: 3 * 60 * 1000,
-      }),
-    ),
-  });
-
-  const sections: { title: string; items: CatalogItem[]; ranked?: boolean }[] = useWeb
-    ? (data?.rows ?? []).map((r) => ({ title: cleanTitle(r.title), items: clean(r.items) }))
-        .filter((s) => s.items.length >= 4)
-    : HOME_SECTIONS.map((section, i) => ({
-        ...section,
-        items: clean(sectionQueries[i]?.data ?? []),
-      })).filter((s) => s.items.length >= 4);
+  // Only the MovieBox website's own home sections are shown.
+  const sections: { title: string; items: CatalogItem[]; ranked?: boolean }[] = (data?.rows ?? []).map((r) => ({ title: cleanTitle(r.title), items: clean(r.items) }))
+    .filter((s) => s.items.length >= 4);
 
   // Real trending straight from the catalog's own trending rail.
   const rankedSection = sections.find((s) => s.ranked);

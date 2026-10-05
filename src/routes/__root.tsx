@@ -12,7 +12,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
-import { DownloadFloat } from "@/components/youku/DownloadFloat";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { AuthProvider } from "@/hooks/useAuth";
 import { DevToolsGuard } from "@/components/security/DevToolsGuard";
@@ -170,7 +169,6 @@ function RootComponent() {
       <WhatsAppPrompt />
       <DownloadTour />
       <Toaster position="top-center" richColors />
-      <DownloadFloat />
     </QueryClientProvider>
 
 

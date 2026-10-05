@@ -452,9 +452,21 @@ async function fetchWebHome() {
   return { hero: hero.slice(0, 8), rows, trending: trending.slice(0, 20), comingSoon: comingSoon.slice(0, 30), web: true };
 }
 
+/** Home is always the MovieBox website's own sections — retried, never replaced. */
 export async function fetchHome() {
-  const web = await fetchWebHome().catch(() => null);
-  if (web) return web;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await fetchWebHome();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
+/** Legacy TV-app home layout, kept only for reference; not used by the site. */
+export async function fetchTvHomeLegacy() {
   const data = await request("GET", "/wefeed-mobile-bff/tab-operating?page=1&tabId=0&version=");
   const items: any[] = Array.isArray(data?.items) ? data.items : [];
 
