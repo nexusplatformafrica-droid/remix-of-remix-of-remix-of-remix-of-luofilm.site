@@ -194,6 +194,115 @@ export async function tvRequest(
   return rawRequest("GET", path, undefined, TV_HOSTS);
 }
 
+/* ------------------------------------------------------------------------- *
+ * Web BFF layer
+ * ------------------------------------------------------------------------- */
+
+let webToken: string | null = null;
+let webInitPromise: Promise<void> | null = null;
+let mediaDomain: string | null = null;
+
+/** subjectId -> detailPath slug, captured whenever a subject passes through. */
+const detailPathCache = new Map<string, string>();
+function rememberDetailPath(subject: any) {
+  const id = subject?.subjectId ? String(subject.subjectId) : "";
+  const slug = typeof subject?.detailPath === "string" ? subject.detailPath : "";
+  if (id && slug) {
+    detailPathCache.set(id, slug);
+    if (detailPathCache.size > 2000) detailPathCache.delete(detailPathCache.keys().next().value!);
+  }
+}
+
+function webHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    accept: "application/json",
+    "accept-language": "en-US,en;q=0.9",
+    "content-type": "application/json",
+    "sec-ch-ua": '"Chromium";v="141", "Not?A_Brand";v="8"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "x-client-info": JSON.stringify({ timezone: "UTC" }),
+    "x-no-high-risk-restrict": "0",
+    "x-vip-restrict": "1",
+    "x-source": "",
+    referer: WEB_REFERER,
+  };
+  if (!isBrowser) {
+    headers["user-agent"] =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36";
+  }
+  if (webToken) headers["authorization"] = `Bearer ${webToken}`;
+  return headers;
+}
+
+async function webRaw(
+  method: "GET" | "POST",
+  path: string,
+  payload?: unknown,
+  host: string = WEB_HOST,
+): Promise<any> {
+  const res = await fetch(`${host}${WEB_PREFIX}${path}`, {
+    method,
+    headers: webHeaders(),
+    body: payload === undefined ? null : JSON.stringify(payload),
+  });
+  const xUser = res.headers.get("x-user");
+  if (xUser) {
+    try {
+      const token = JSON.parse(xUser)?.token;
+      if (typeof token === "string" && token) webToken = token;
+    } catch {
+      /* ignore malformed header */
+    }
+  }
+  if (!res.ok) throw new Error(`web ${res.status}`);
+  const json = (await res.json()) as any;
+  if (json && typeof json.code === "number" && json.code !== 0 && json.code !== 200)
+    throw new Error(`web code ${json.code}`);
+  return json?.data ?? json;
+}
+
+async function ensureWebToken() {
+  if (webToken) return;
+  if (!webInitPromise) {
+    webInitPromise = webRaw("GET", "/country-code")
+      .then(() => undefined)
+      .catch(() => undefined)
+      .finally(() => {
+        webInitPromise = null;
+      });
+  }
+  await webInitPromise;
+}
+
+export async function webRequest(
+  method: "GET" | "POST",
+  path: string,
+  payload?: unknown,
+  host?: string,
+): Promise<any> {
+  await ensureWebToken();
+  try {
+    return await webRaw(method, path, payload, host);
+  } catch {
+    webToken = null;
+    await ensureWebToken();
+    return webRaw(method, path, payload, host);
+  }
+}
+
+/** Media domain that serves subject/play (e.g. https://mzfi.me). */
+async function getMediaDomain(): Promise<string> {
+  if (mediaDomain) return mediaDomain;
+  const data = await webRequest("GET", "/media-player/get-domain").catch(() => null);
+  const url = typeof data === "string" && data.startsWith("https://") ? data.replace(/\/$/, "") : "";
+  mediaDomain = url || "https://mzfi.me";
+  return mediaDomain;
+}
+
 async function rawRequest(
   method: "GET" | "POST",
   path: string,
