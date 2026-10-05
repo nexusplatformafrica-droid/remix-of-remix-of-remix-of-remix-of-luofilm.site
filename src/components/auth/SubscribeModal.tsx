@@ -729,7 +729,7 @@ export function SubscribeModal({
               {method !== "paypal" && method !== "card" && phase === "waiting" && <PaymentButtonSkeleton />}
               {method !== "paypal" && (method !== "card" || phase === "failed") && phase !== "waiting" && <button
                 type="button"
-                disabled={phase === "waiting" || phase === "done"}
+                disabled={phase === "done" || (method === "mobile_money" && (!detectedProvider || detectingProvider))}
                 onClick={() => {
                   if (phase === "idle" || phase === "failed") {
                     if (method === "mobile_money") void pay();
@@ -738,10 +738,8 @@ export function SubscribeModal({
                 }}
                 className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[14px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60 sm:h-12 sm:text-[15px]"
               >
-                {method === "mobile_money" && phase !== "waiting" && <Smartphone className="size-4" />}
-                {phase === "waiting"
-                  ? "Waiting for payment…"
-                  : phase === "done"
+                {method === "mobile_money" && <Smartphone className="size-4" />}
+                {phase === "done"
                     ? "Activated"
                     : phase === "card"
                       ? "Waiting for card payment…"
