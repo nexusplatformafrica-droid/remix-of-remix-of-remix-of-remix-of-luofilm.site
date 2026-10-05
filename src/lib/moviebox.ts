@@ -415,7 +415,46 @@ export function toItem(subject: any): CatalogItem | null {
   };
 }
 
+/** Home exactly as the MovieBox website shows it (web `/home` operating list). */
+async function fetchWebHome() {
+  const data = await webRequest("GET", "/home?host=moviebox.ph");
+  const blocks: any[] = Array.isArray(data?.operatingList) ? data.operatingList : [];
+  const hero: CatalogItem[] = [];
+  const rows: { title: string; items: CatalogItem[] }[] = [];
+  let comingSoon: CatalogItem[] = [];
+  for (const block of blocks) {
+    if (block?.type === "BANNER") {
+      const list: any[] = block?.banner?.items ?? block?.banner?.banners ?? [];
+      for (const b of list) {
+        const item = toItem(b?.subject ?? b);
+        const img = b?.image?.url ?? b?.cover?.url;
+        if (item) hero.push({ ...item, backdrop: img ? artworkUrl(img, 1440) : item.backdrop });
+      }
+      continue;
+    }
+    const subjects: any[] = Array.isArray(block?.subjects) ? block.subjects : [];
+    const items = subjects.map(toItem).filter((i): i is CatalogItem => !!i?.poster);
+    if (!items.length) continue;
+    if (block?.type === "APPOINTMENT_LIST") {
+      comingSoon = [...comingSoon, ...items];
+      continue;
+    }
+    if (block?.type !== "SUBJECTS_MOVIE" || items.length < 4) continue;
+    const title = railTitle(String(block?.title || ""));
+    const existing = rows.find((r) => r.title.toLowerCase() === title.toLowerCase());
+    if (existing) {
+      const ids = new Set(existing.items.map((i) => i.id));
+      existing.items.push(...items.filter((i) => !ids.has(i.id)));
+    } else rows.push({ title, items });
+  }
+  if (rows.length < 3) throw new Error("web home empty");
+  const trending = rows.find((r) => /popular/i.test(r.title))?.items ?? rows[0]!.items;
+  return { hero: hero.slice(0, 8), rows, trending: trending.slice(0, 20), comingSoon: comingSoon.slice(0, 30), web: true };
+}
+
 export async function fetchHome() {
+  const web = await fetchWebHome().catch(() => null);
+  if (web) return web;
   const data = await request("GET", "/wefeed-mobile-bff/tab-operating?page=1&tabId=0&version=");
   const items: any[] = Array.isArray(data?.items) ? data.items : [];
 
@@ -856,7 +895,17 @@ async function webSources(
   season: number,
   episode: number,
 ): Promise<StreamSource[]> {
-  const detailPath = detailPathCache.get(subjectId);
+  let detailPath = detailPathCache.get(subjectId);
+  if (!detailPath) {
+    // Cold server instance: recover the web slug from details, then web search.
+    const details = await fetchDetails(subjectId).catch(() => null);
+    detailPath = detailPathCache.get(subjectId);
+    if (!detailPath && details?.title) {
+      const found = await webSearchSubjects(details.title).catch(() => null);
+      for (const s of found ?? []) rememberDetailPath(s);
+      detailPath = detailPathCache.get(subjectId);
+    }
+  }
   if (!detailPath) return [];
   const { se, ep } = playIdentity(season, episode);
   const host = await getMediaDomain().catch(() => "https://mzfi.me");
