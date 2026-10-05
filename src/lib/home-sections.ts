@@ -68,14 +68,13 @@ export const HOME_SECTIONS: HomeSection[] = [
   {
     live: true,
     title: "Bet+",
-    // Real BET+ originals, each matched strictly by name in the catalog.
-    titles: [
-      "Sistas", "The Oval", "Ruthless", "All the Queen's Men", "Bigger",
-      "The Family Business", "Zatima", "Tyler Perry's House of Payne",
-      "The Ms. Pat Show", "First Wives Club", "Average Joe", "Kingdom Business",
-      "Bruh", "Johnson", "Carl Weber's The Family Business", "American Gangster: Trap Queens",
-      "Tyler Perry's Assisted Living", "Bad Hair",
-    ],
+    // Live searches for BET+ style shows — no fixed name list, so the row
+    // refreshes with the catalog and never grabs a different movie that
+    // happens to share a title.
+    keywords: ["tyler perry series", "black drama series", "african american drama", "urban crime series"],
+    genre: /drama|crime|romance|comedy|thriller/i,
+    avoidGenre: /anime|animation|reality/i,
+    type: "series",
   },
   {
     live: true,
