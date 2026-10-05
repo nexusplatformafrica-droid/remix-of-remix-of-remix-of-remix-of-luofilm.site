@@ -43,7 +43,7 @@ export async function uploadToR2(folder: string, file: File, onProgress?: (p: Up
       return data;
     });
     report(file.size);
-    return payload.url;
+    return payload.url ?? "";
   }
   const created = await request("create", JSON.stringify({ filename: file.name, contentType: file.type }), { "Content-Type": "application/json" });
   if (!created.key || !created.uploadId || !created.url) throw new Error("Could not start upload");

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/admin-upload")({
         const key = new URL(request.url).searchParams.get("key");
         if (!safeKey(key)) return new Response("Not found", { status: 404 });
         try {
-          const object = await uploadBucket().get(key, { range: request.headers });
+          const object = await uploadBucket(request).get(key, { range: request.headers });
           if (!object) return new Response("Not found", { status: 404 });
           const headers = new Headers({
             "content-type": object.httpMetadata?.contentType ?? "application/octet-stream",
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/admin-upload")({
       POST: async ({ request }) => {
         if (!(await verifyUploadAdmin(request))) return json({ error: "Unauthorized admin upload" }, 403);
         let bucket: ReturnType<typeof uploadBucket>;
-        try { bucket = uploadBucket(); }
+        try { bucket = uploadBucket(request); }
         catch (error) { return json({ error: error instanceof Error ? error.message : "R2 unavailable" }, 503); }
         const url = new URL(request.url);
         const action = url.searchParams.get("action");
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/public/admin-upload")({
         const uploadId = url.searchParams.get("uploadId");
         const part = Number(url.searchParams.get("part"));
         if (!safeKey(key) || !uploadId || uploadId.length > 200 || !Number.isInteger(part) || part < 1 || part > 10000 || !request.body) return json({ error: "Invalid part" }, 400);
-        const uploaded = await uploadBucket().resumeMultipartUpload(key, uploadId).uploadPart(part, request.body);
+        const uploaded = await uploadBucket(request).resumeMultipartUpload(key, uploadId).uploadPart(part, request.body);
         return json({ etag: uploaded.etag });
       },
     },

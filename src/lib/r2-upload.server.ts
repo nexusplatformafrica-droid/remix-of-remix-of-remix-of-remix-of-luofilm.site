@@ -1,5 +1,3 @@
-import { env } from "cloudflare:workers";
-
 type R2Object = {
   body: ReadableStream;
   size: number;
@@ -18,8 +16,9 @@ type Bucket = {
   };
 };
 
-export function uploadBucket(): Bucket {
-  const bucket = (env as Record<string, unknown>).MOVIE_MAX_MEDIA as Bucket | undefined;
+export function uploadBucket(request: Request): Bucket {
+  const runtime = request as Request & { runtime?: { cloudflare?: { env?: Record<string, unknown> } } };
+  const bucket = runtime.runtime?.cloudflare?.env?.['MOVIE_MAX_MEDIA'] as Bucket | undefined;
   if (!bucket?.put || !bucket?.get) throw new Error("R2 binding MOVIE_MAX_MEDIA is not configured.");
   return bucket;
 }
