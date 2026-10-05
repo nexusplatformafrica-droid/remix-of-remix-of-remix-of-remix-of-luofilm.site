@@ -33,15 +33,15 @@ type Channel = "whatsapp" | "email";
 const TEMPLATES: { label: string; body: string }[] = [
   {
     label: "New release",
-    body: "New on LUOFILM.SITE: *{title}* is out now — watch or download it free.\n{link}",
+    body: "New on MOVIE MAX: *{title}* is out now — watch or download it free.\n{link}",
   },
   {
     label: "New episodes",
-    body: "Fresh episodes of *{title}* have just been added on LUOFILM.SITE.\n{link}",
+    body: "Fresh episodes of *{title}* have just been added on MOVIE MAX.\n{link}",
   },
   {
     label: "Luo translated",
-    body: "*{title}* is now available in Luo translation on LUOFILM.SITE.\n{link}",
+    body: "*{title}* is now available in Luo translation on MOVIE MAX.\n{link}",
   },
 ];
 
@@ -67,7 +67,7 @@ export function NotifyTab() {
   const [titleId, setTitleId] = useState("");
   const [episodeId, setEpisodeId] = useState("");
   const [manualTitle, setManualTitle] = useState("");
-  const [subject, setSubject] = useState("New on LUOFILM.SITE");
+  const [subject, setSubject] = useState("New on MOVIE MAX");
   const [body, setBody] = useState(TEMPLATES[0]!.body);
   const [results, setResults] = useState<SendResult[]>([]);
   const [mailResults, setMailResults] = useState<EmailResult[]>([]);
@@ -381,7 +381,7 @@ export function NotifyTab() {
                 type="button"
                 onClick={() => {
                   setBody(t.body);
-                  setSubject(t.label === "New episodes" ? "New episodes just dropped" : "New on LUOFILM.SITE");
+                  setSubject(t.label === "New episodes" ? "New episodes just dropped" : "New on MOVIE MAX");
                 }}
                 className={`${ghostBtn} h-9 px-4 text-[12px]`}
               >

@@ -8,7 +8,7 @@ import { LuoLibrary } from "@/components/luo/LuoLibrary";
 export const Route = createFileRoute("/teso/")({
   head: () => {
     const title =
-      "LUOFILM.SITE Watch and Download Teso Translated Movies by Your Favourite VJ — Movies and Series from All Teso VJs";
+      "MOVIE MAX Watch and Download Teso Translated Movies by Your Favourite VJ — Movies and Series from All Teso VJs";
     const description =
       "Watch and download Teso translated movies and series from your favourite Teso VJs. Movies, series, animation, comedy, action and every genre, free in HD.";
     return {
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/teso/")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: "/teso" },
-        { property: "og:site_name", content: "LUOFILM.SITE" },
+        { property: "og:site_name", content: "MOVIE MAX" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },

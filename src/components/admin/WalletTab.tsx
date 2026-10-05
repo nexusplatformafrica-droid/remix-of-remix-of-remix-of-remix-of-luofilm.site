@@ -147,7 +147,7 @@ export function WalletTab() {
         phone: form.phone,
         amount,
         currency: form.currency,
-        description: form.reason.trim() || "LUOFILM payout",
+        description: form.reason.trim() || "MOVIE MAX payout",
       });
 
       const { data: me } = await supabase.auth.getUser();

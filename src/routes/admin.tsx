@@ -22,12 +22,12 @@ import { SOFT_BG, goldBtn } from "@/components/admin/ui";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Dashboard — LUOFILM.SITE" },
-      { name: "description", content: "Manage users, content, wallet and subscription settings on LUOFILM.SITE." },
-      { property: "og:title", content: "Admin Dashboard — LUOFILM.SITE" },
+      { title: "Admin Dashboard — MOVIE MAX" },
+      { name: "description", content: "Manage users, content, wallet and subscription settings on MOVIE MAX." },
+      { property: "og:title", content: "Admin Dashboard — MOVIE MAX" },
       {
         property: "og:description",
-        content: "Manage users, content, wallet and subscription settings on LUOFILM.SITE.",
+        content: "Manage users, content, wallet and subscription settings on MOVIE MAX.",
       },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
@@ -80,7 +80,7 @@ function AdminPage() {
             <header className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h1 className="text-[24px] font-black leading-tight tracking-tight">Admin dashboard</h1>
-                <p className="text-[12px] opacity-60">LUOFILM.SITE control centre</p>
+                <p className="text-[12px] opacity-60">MOVIE MAX control centre</p>
               </div>
               <span className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 text-[12px] font-semibold ring-1 ring-black/5">
                 <ShieldCheck className="size-4 text-[oklch(0.6_0.14_150)]" />

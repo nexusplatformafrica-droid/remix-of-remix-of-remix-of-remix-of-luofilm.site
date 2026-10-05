@@ -89,7 +89,7 @@ export function WhatsAppPrompt() {
     >
       <aside
         role="dialog"
-        aria-label="Follow LUOFILM on WhatsApp"
+        aria-label="Follow MOVIE MAX on WhatsApp"
         className={`wa-prompt pointer-events-auto relative w-full max-w-sm transition-all duration-400 ${
           leaving ? "scale-95 opacity-0" : "animate-enter"
         }`}
@@ -127,7 +127,7 @@ export function WhatsAppPrompt() {
               Don't miss new releases!
             </h2>
             <p className="mt-1 text-sm text-white/75">
-              Join LUOFILM on WhatsApp for instant movie & episode updates.
+              Join MOVIE MAX on WhatsApp for instant movie & episode updates.
             </p>
 
             <div className="mt-4 flex w-full items-center justify-center gap-3">
@@ -155,7 +155,7 @@ export function WhatsAppPrompt() {
 
             <p className="mt-3 flex items-center gap-1.5 text-[11px] text-white/55">
               <Users className="size-3" />
-              Loved by thousands of LUOFILM viewers
+              Loved by thousands of MOVIE MAX viewers
             </p>
           </div>
 

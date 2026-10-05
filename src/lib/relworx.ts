@@ -195,7 +195,7 @@ export async function sendWithdrawal(input: {
     amount,
     currency: target.currency,
     reference,
-    description: input.description || "LUOFILM payout",
+    description: input.description || "MOVIE MAX payout",
   });
 
   const internal = res?.internal_reference ?? res?.data?.internal_reference ?? null;

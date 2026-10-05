@@ -49,20 +49,20 @@ export const Route = createFileRoute("/watch/$id")({
       // applied client-side once the title loads.
       return {
         meta: [
-          { title: "Watch — LUOFILM" },
-          { name: "description", content: "Stream movies and series instantly on LUOFILM." },
+          { title: "Watch — MOVIE MAX" },
+          { name: "description", content: "Stream movies and series instantly on MOVIE MAX." },
         ],
       };
     }
     if ((loaderData as { unavailable?: boolean }).unavailable) {
-      return { meta: [{ title: "Unavailable — LUOFILM" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Unavailable — MOVIE MAX" }, { name: "robots", content: "noindex" }] };
     }
     const description =
-      loaderData.description?.slice(0, 155) ?? `Stream ${loaderData.title} on LUOFILM.`;
+      loaderData.description?.slice(0, 155) ?? `Stream ${loaderData.title} on MOVIE MAX.`;
     const meta: { title?: string; name?: string; property?: string; content?: string }[] = [
-      { title: `Watch ${loaderData.title} — LUOFILM` },
+      { title: `Watch ${loaderData.title} — MOVIE MAX` },
       { name: "description", content: description },
-      { property: "og:title", content: `Watch ${loaderData.title} — LUOFILM` },
+      { property: "og:title", content: `Watch ${loaderData.title} — MOVIE MAX` },
       { property: "og:description", content: description },
       { property: "og:type", content: "video.other" },
       { name: "twitter:card", content: "summary_large_image" },

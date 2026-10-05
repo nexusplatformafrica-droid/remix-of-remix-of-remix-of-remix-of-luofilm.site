@@ -1,4 +1,4 @@
-/** Sidebar / top-bar sections. Each maps to a LUOFILM search keyword. */
+/** Sidebar / top-bar sections. Each maps to a MOVIE MAX search keyword. */
 export type SiteCategory = {
   slug: string;
   short: string;

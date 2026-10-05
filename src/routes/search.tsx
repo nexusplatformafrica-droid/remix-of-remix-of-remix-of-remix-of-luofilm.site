@@ -45,16 +45,16 @@ export const Route = createFileRoute("/search")({
   validateSearch: z.object({ q: z.string().optional() }),
   head: () => ({
     meta: [
-      { title: "Browse & Search Titles — LUOFILM" },
+      { title: "Browse & Search Titles — MOVIE MAX" },
       {
         name: "description",
         content:
-          "Search the LUOFILM catalog for any movie or TV series and start streaming in seconds.",
+          "Search the MOVIE MAX catalog for any movie or TV series and start streaming in seconds.",
       },
-      { property: "og:title", content: "Browse & Search Titles — LUOFILM" },
+      { property: "og:title", content: "Browse & Search Titles — MOVIE MAX" },
       {
         property: "og:description",
-        content: "Search the LUOFILM catalog and start streaming in seconds.",
+        content: "Search the MOVIE MAX catalog and start streaming in seconds.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

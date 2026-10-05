@@ -13,7 +13,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: "Step 1 — Open Luo or Luganda movies",
-    body: "To download movies on LUOFILM.SITE, first tap the highlighted LUO tab. You can follow the same steps from LUGANDA.",
+    body: "To download movies on MOVIE MAX, first tap the highlighted LUO tab. You can follow the same steps from LUGANDA.",
     selector: '[data-tour="luo-tab"]',
     requireClick: true,
   },
@@ -231,7 +231,7 @@ export function DownloadTour() {
 
       <div
         role="dialog"
-        aria-label="How to download movies on LUOFILM.SITE"
+        aria-label="How to download movies on MOVIE MAX"
         className={`pointer-events-auto absolute inset-x-4 mx-auto max-w-md rounded-3xl border border-border bg-card p-5 shadow-2xl ${
           cardOnTop ? "top-32" : "bottom-24"
         } lg:left-1/2 lg:right-auto lg:mx-0 lg:-translate-x-1/2 ${

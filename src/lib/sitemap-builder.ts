@@ -188,7 +188,7 @@ export async function buildSitemap(name: string): Promise<string> {
             video: {
               thumb: t.poster!,
               title: t.title,
-              description: t.description ?? `${t.title}${t.vj ? ` — ${vjInfo(t.vj)?.name}` : ""} translated ${t.language === "luo" ? "Luo" : "Luganda"} movie on LUOFILM.`,
+              description: t.description ?? `${t.title}${t.vj ? ` — ${vjInfo(t.vj)?.name}` : ""} translated ${t.language === "luo" ? "Luo" : "Luganda"} movie on MOVIE MAX.`,
               player: BASE_URL + path,
               content: null,
             },
@@ -201,7 +201,7 @@ export async function buildSitemap(name: string): Promise<string> {
             video: {
               thumb: (t.backdrop ?? t.poster)!,
               title: t.title,
-              description: `Watch and download ${t.title}${t.year ? ` (${t.year})` : ""}${t.genre ? ` — ${t.genre}` : ""} ${t.type === "series" ? "series" : "movie"} with subtitles on LUOFILM.`,
+              description: `Watch and download ${t.title}${t.year ? ` (${t.year})` : ""}${t.genre ? ` — ${t.genre}` : ""} ${t.type === "series" ? "series" : "movie"} with subtitles on MOVIE MAX.`,
               player: BASE_URL + path,
             },
           };

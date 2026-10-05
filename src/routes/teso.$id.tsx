@@ -40,17 +40,17 @@ export const Route = createFileRoute("/teso/$id")({
   },
   head: ({ params, loaderData }) => {
     const name = loaderData?.title ?? "Teso Translated Movie";
-    const title = `${name} in Teso — Watch free on LUOFILM.SITE`;
+    const title = `${name} in Teso — Watch free on MOVIE MAX`;
     const description =
       loaderData?.description?.slice(0, 155) ??
-      `Watch ${name} translated in Teso, free and in HD, on LUOFILM.SITE.`;
+      `Watch ${name} translated in Teso, free and in HD, on MOVIE MAX.`;
     const meta: { title?: string; name?: string; property?: string; content?: string }[] = [
       { title },
       { name: "description", content: description },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "video.movie" },
-      { property: "og:site_name", content: "LUOFILM.SITE" },
+      { property: "og:site_name", content: "MOVIE MAX" },
       { property: "og:url", content: `${SITE_URL}/teso/${params.id}` },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },

@@ -14,12 +14,12 @@ const WhopEmbed = lazy(() => import("@/components/auth/WhopEmbed"));
 export const Route = createFileRoute("/pay/$id")({
   head: () => ({
     meta: [
-      { title: "Complete your payment — LUOFILM.SITE" },
-      { name: "description", content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal." },
-      { property: "og:title", content: "Complete your payment — LUOFILM.SITE" },
+      { title: "Complete your payment — MOVIE MAX" },
+      { name: "description", content: "Finish your MOVIE MAX membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal." },
+      { property: "og:title", content: "Complete your payment — MOVIE MAX" },
       {
         property: "og:description",
-        content: "Finish your LUOFILM membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal.",
+        content: "Finish your MOVIE MAX membership payment with Mobile Money, card, Google Pay, Apple Pay or PayPal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -168,7 +168,7 @@ function PayPage() {
     <main className="grid min-h-screen place-items-center bg-[linear-gradient(160deg,oklch(0.98_0.02_20),oklch(0.97_0.03_320)_45%,oklch(0.98_0.03_80))] px-4 py-10 text-[oklch(0.28_0.03_320)]">
       <section className="w-full max-w-[420px] rounded-[28px] bg-white/70 p-6 shadow-2xl ring-1 ring-black/5 backdrop-blur">
         <h1 className="text-[20px] font-black tracking-tight">Complete your payment</h1>
-        <p className="mt-1 text-[12px] opacity-65">LUOFILM.SITE membership</p>
+        <p className="mt-1 text-[12px] opacity-65">MOVIE MAX membership</p>
 
         {tx ? (
           <>
@@ -297,7 +297,7 @@ function PayPage() {
               href="/"
               className="mt-3 block text-center text-[11px] font-semibold opacity-60 hover:opacity-100"
             >
-              Back to LUOFILM
+              Back to MOVIE MAX
             </a>
           </>
         ) : (

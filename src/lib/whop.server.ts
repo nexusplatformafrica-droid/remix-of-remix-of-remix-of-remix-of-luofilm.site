@@ -65,7 +65,7 @@ export async function createWhopCheckout(input: {
           currency,
           initial_price: price,
           plan_type: "one_time",
-          title: `LUOFILM ${input.planName}`.slice(0, 60),
+          title: `MOVIE MAX ${input.planName}`.slice(0, 60),
         },
         redirect_url: input.redirectUrl,
         metadata: { tx_id: input.txId, reference: input.reference },

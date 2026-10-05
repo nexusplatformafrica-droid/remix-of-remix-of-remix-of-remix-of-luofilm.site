@@ -40,12 +40,12 @@ export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
     const category = findCategory(params.slug);
     const label = category?.label ?? "Browse";
-    const description = `Stream ${label.toLowerCase()} on LUOFILM — HD movies and series with subtitles, playable right in your browser.`;
+    const description = `Stream ${label.toLowerCase()} on MOVIE MAX — HD movies and series with subtitles, playable right in your browser.`;
     return {
       meta: [
-        { title: `${label} — LUOFILM` },
+        { title: `${label} — MOVIE MAX` },
         { name: "description", content: description },
-        { property: "og:title", content: `${label} — LUOFILM` },
+        { property: "og:title", content: `${label} — MOVIE MAX` },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
