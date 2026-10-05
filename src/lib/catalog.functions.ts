@@ -1,10 +1,7 @@
 /**
  * Catalog access layer.
  *
- * These run in whichever runtime calls them: during SSR they hit the upstream
- * from the server, and in the browser they hit it directly (the catalog sends
- * permissive CORS headers). That keeps the app working on hosts whose egress
- * IPs the catalog blocks — the shell renders, the browser fills in the data.
+ * Catalog calls stay server-side because the upstream rejects browser origins.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -34,12 +31,22 @@ export type HomeData = {
   web?: boolean;
 };
 
+// A transient upstream failure must not replace real web sections with an empty page.
+// Worker instances may come and go, so this is only a short-lived resilience cache.
+let lastGoodWebHome: { value: HomeData; at: number } | null = null;
+
 export const getHome = createServerFn({ method: "GET" }).handler(async (): Promise<HomeData> => {
   try {
-    return await fetchHome();
+    const home = await fetchHome();
+    if (!home.rows.length) throw new Error("Web home returned no sections");
+    lastGoodWebHome = { value: home, at: Date.now() };
+    return home;
   } catch (error) {
     console.error(error);
-    return { hero: [], rows: [], trending: [], comingSoon: [], degraded: true };
+    if (lastGoodWebHome && Date.now() - lastGoodWebHome.at < 15 * 60_000) {
+      return { ...lastGoodWebHome.value, degraded: true };
+    }
+    throw new Error("MovieBox web sections are temporarily unavailable");
   }
 });
 
