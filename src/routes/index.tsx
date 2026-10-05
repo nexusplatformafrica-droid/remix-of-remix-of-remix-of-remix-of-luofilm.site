@@ -221,7 +221,7 @@ function HomePage() {
         <div className="relative">
           <TopBar />
 
-          {!data && (
+          {(!heroReady || !slides.length) && (
             <div className="px-3 pt-[68px] sm:px-4 lg:px-8 lg:pt-20">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -231,9 +231,7 @@ function HomePage() {
             </div>
           )}
 
-          {!!data && !slides.length && <div className="h-16" />}
-
-          {!!slides.length && (
+          {heroReady && !!slides.length && (
             <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-12px)/1.9)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-260px)/3)] lg:px-8">
               {/* The hero never stops: cards in animated gradient holders pass
                   slowly across the page forever — 2 across on mobile, 3 bigger
