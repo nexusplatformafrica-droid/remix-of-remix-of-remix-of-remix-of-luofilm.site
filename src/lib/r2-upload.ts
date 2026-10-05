@@ -1,203 +1,73 @@
-import { uploadBackend, uploadToken } from "./r2-config";
+import { getFbAuth } from "./firebase";
 
 export type UploadProgress = { loaded: number; total: number; percent: number };
-
 const PART_SIZE = 16 * 1024 * 1024;
-const CONCURRENCY = 12;
-/** Files up to this size go up in one signed PUT — fewer round-trips is faster. */
-const SINGLE_LIMIT = 16 * 1024 * 1024;
-/** How many part URLs we ask the signer for in a single request. */
-const SIGN_BATCH = 200;
-const MAX_ATTEMPTS = 60;
+const MAX_RETRIES = 5;
 
-async function rawSigner<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${uploadBackend()}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${uploadToken()}` },
-    body: JSON.stringify(body),
+async function request(action: string, body: BodyInit, headers: Record<string, string> = {}, method = "POST") {
+  const user = getFbAuth().currentUser;
+  if (!user) throw new Error("You must be signed in to upload.");
+  const token = await user.getIdToken();
+  const response = await fetch(`/api/public/admin-upload?action=${action}`, {
+    method, body, headers: { ...headers, Authorization: `Bearer ${token}` },
   });
-  const text = await res.text();
-  let payload: unknown;
-  try {
-    payload = JSON.parse(text);
-  } catch {
-    payload = { message: text };
-  }
-  if (!res.ok) {
-    const message = (payload as { message?: string; error?: string }).message ??
-      (payload as { error?: string }).error ??
-      `Upload service error (${res.status})`;
-    throw new Error(message);
-  }
-  return payload as T;
+  const payload = await response.json() as { error?: string; url?: string; key?: string; uploadId?: string; etag?: string };
+  if (!response.ok) throw new Error(payload.error || `Upload failed (${response.status})`);
+  return payload;
 }
 
-function put(url: string, body: Blob, onLoaded?: (loaded: number) => void) {
-  return new Promise<string | null>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onLoaded?.(e.loaded);
-    };
-    xhr.onload = () =>
-      xhr.status >= 200 && xhr.status < 300
-        ? resolve(xhr.getResponseHeader("ETag")?.replace(/"/g, "") ?? null)
-        : reject(new Error(xhr.responseText || `Upload failed (${xhr.status})`));
-    xhr.onerror = () => reject(new Error("Network error during upload"));
-    xhr.send(body);
-  });
-}
-
-/**
- * Blocks until the browser is back online again. Data toggled off then on, a
- * flaky tunnel or a dropped Wi-Fi hop simply pauses the upload instead of
- * failing it — we keep waiting (up to 30 min) and resume the same part.
- */
-async function waitForNetwork() {
-  if (typeof navigator === "undefined" || navigator.onLine) return;
-  await new Promise<void>((resolve) => {
-    const deadline = Date.now() + 30 * 60 * 1000;
-    const finish = () => {
-      window.removeEventListener("online", finish);
-      clearInterval(poll);
-      resolve();
-    };
-    const poll = setInterval(() => {
-      if (navigator.onLine || Date.now() > deadline) finish();
-    }, 1000);
-    window.addEventListener("online", finish);
-  });
-}
-
-/** A permanent, non-retryable failure (bad token, rejected request). */
-const fatal = (err: unknown) =>
-  /unauthor|forbidden|invalid|not configured|must be signed in/i.test(
-    err instanceof Error ? err.message : "",
-  );
-
-/** Retries an upload step across network drops with capped backoff. */
-async function withRetry<T>(run: () => Promise<T>, onReset?: () => void): Promise<T> {
+async function retry<T>(fn: () => Promise<T>): Promise<T> {
   for (let attempt = 1; ; attempt++) {
-    try {
-      return await run();
-    } catch (err) {
-      onReset?.();
-      if (fatal(err) || attempt >= MAX_ATTEMPTS) throw err;
-      await waitForNetwork();
-      await new Promise((r) => setTimeout(r, Math.min(10000, 1000 * attempt)));
+    try { return await fn(); }
+    catch (error) {
+      if (attempt >= MAX_RETRIES || /unauthor|binding|invalid/i.test(String(error))) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
 }
 
-const signer = <T,>(path: string, body: unknown) => withRetry(() => rawSigner<T>(path, body));
-
-
-export async function uploadToR2(
-  folder: string,
-  file: File,
-  onProgress?: (p: UploadProgress) => void,
-): Promise<string> {
-  const emit = (loaded: number) =>
-    onProgress?.({ loaded, total: file.size, percent: Math.round((loaded / Math.max(1, file.size)) * 100) });
-
-  if (file.size <= SINGLE_LIMIT) {
-    const { url, publicUrl } = await signer<{ url: string; publicUrl: string }>("/uploads/single", {
-      folder,
-      filename: file.name,
-      contentType: file.type || "application/octet-stream",
-    });
-    await withRetry(() => put(url, file, emit), () => emit(0));
-    emit(file.size);
-    return publicUrl;
+export async function uploadToR2(folder: string, file: File, onProgress?: (p: UploadProgress) => void): Promise<string> {
+  if (folder !== "media/admin") throw new Error("Invalid upload location");
+  const report = (loaded: number) => onProgress?.({ loaded, total: file.size, percent: Math.round(100 * loaded / Math.max(1, file.size)) });
+  if (file.size <= PART_SIZE) {
+    const params = new URLSearchParams({ action: "single", filename: file.name });
+    const user = getFbAuth().currentUser;
+    if (!user) throw new Error("You must be signed in to upload.");
+    const response = await retry(() => fetch(`/api/public/admin-upload?${params}`, {
+      method: "POST", body: file,
+      headers: { Authorization: `Bearer ${awaitToken(user)}`, "Content-Type": file.type || "application/octet-stream" },
+    }));
+    const payload = await response.json() as { error?: string; url?: string };
+    if (!response.ok || !payload.url) throw new Error(payload.error || `Upload failed (${response.status})`);
+    report(file.size);
+    return payload.url;
   }
-
-  const { key, uploadId, publicUrl } = await signer<{ key: string; uploadId: string; publicUrl: string }>(
-    "/uploads/create",
-    { folder, filename: file.name, contentType: file.type || "application/octet-stream" },
-  );
-
-  const totalParts = Math.ceil(file.size / PART_SIZE);
-  const loadedPerPart = new Array<number>(totalParts).fill(0);
-  const etags = new Array<string>(totalParts);
-  let lastReport = 0;
-  const report = (force = false) => {
-    const now = Date.now();
-    if (!force && now - lastReport < 120) return;
-    lastReport = now;
-    emit(loadedPerPart.reduce((a, b) => a + b, 0));
-  };
-
-  // Sign every part up front in a couple of batched calls instead of one
-  // round-trip per 16 MB chunk — that alone removes most of the upload wait.
-  const signed = new Map<number, string>();
-  for (let from = 1; from <= totalParts; from += SIGN_BATCH) {
-    const partNumbers = Array.from(
-      { length: Math.min(SIGN_BATCH, totalParts - from + 1) },
-      (_, i) => from + i,
-    );
-    const { urls } = await signer<{ urls: { partNumber: number; url: string }[] }>("/uploads/sign", {
-      key,
-      uploadId,
-      partNumbers,
-    });
-    urls.forEach((u) => signed.set(u.partNumber, u.url));
-  }
-
-  const signOne = async (partNumber: number) => {
-    const { urls } = await signer<{ urls: { partNumber: number; url: string }[] }>("/uploads/sign", {
-      key,
-      uploadId,
-      partNumbers: [partNumber],
-    });
-    const url = urls.find((u) => u.partNumber === partNumber)?.url;
-    if (url) signed.set(partNumber, url);
-    return url;
-  };
-
-  let next = 0;
-  const worker = async () => {
-    for (;;) {
-      const index = next++;
-      if (index >= totalParts) return;
-      const partNumber = index + 1;
-      const blob = file.slice(index * PART_SIZE, Math.min((index + 1) * PART_SIZE, file.size));
-
-      // Each part re-sends (re-signing only if needed) until it lands, so a
-      // dropped connection only rewinds that one chunk — never the whole file.
-      await withRetry(
-        async () => {
-          const target = signed.get(partNumber) ?? (await signOne(partNumber));
-          if (!target) throw new Error("Signer returned no URL for this part");
-          const etag = await put(target, blob, (loaded) => {
-            loadedPerPart[index] = loaded;
-            report();
-          });
-          if (!etag) throw new Error("Missing ETag — check R2 CORS ExposeHeaders");
-          etags[index] = etag;
-          loadedPerPart[index] = blob.size;
-          report(true);
-        },
-        () => {
-          // Force a fresh signature on retry — the old one may have expired.
-          signed.delete(partNumber);
-          loadedPerPart[index] = 0;
-          report(true);
-        },
-      );
-    }
-  };
-
+  const created = await request("create", JSON.stringify({ filename: file.name, contentType: file.type }), { "Content-Type": "application/json" });
+  if (!created.key || !created.uploadId || !created.url) throw new Error("Could not start upload");
+  const parts: { partNumber: number; etag: string }[] = [];
+  let loaded = 0;
   try {
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, totalParts) }, worker));
-    await signer("/uploads/complete", {
-      key,
-      uploadId,
-      parts: etags.map((etag, i) => ({ partNumber: i + 1, etag })),
-    });
-    emit(file.size);
-    return publicUrl;
-  } catch (err) {
-    void signer("/uploads/abort", { key, uploadId }).catch(() => {});
-    throw err;
+    for (let offset = 0, partNumber = 1; offset < file.size; offset += PART_SIZE, partNumber++) {
+      const blob = file.slice(offset, Math.min(offset + PART_SIZE, file.size));
+      const params = new URLSearchParams({ key: created.key, uploadId: created.uploadId, part: String(partNumber) });
+      const result = await retry(async () => {
+        const user = getFbAuth().currentUser;
+        if (!user) throw new Error("You must be signed in to upload.");
+        const response = await fetch(`/api/public/admin-upload?${params}`, {
+          method: "PUT", body: blob, headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+        });
+        const payload = await response.json() as { etag?: string; error?: string };
+        if (!response.ok || !payload.etag) throw new Error(payload.error || `Part ${partNumber} failed`);
+        return payload;
+      });
+      parts.push({ partNumber, etag: result.etag ?? "" });
+      loaded += blob.size;
+      report(loaded);
+    }
+    await request("complete", JSON.stringify({ key: created.key, uploadId: created.uploadId, parts }), { "Content-Type": "application/json" });
+    return created.url;
+  } catch (error) {
+    void request("abort", JSON.stringify({ key: created.key, uploadId: created.uploadId }), { "Content-Type": "application/json" }).catch(() => {});
+    throw error;
   }
 }
