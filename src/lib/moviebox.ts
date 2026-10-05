@@ -25,6 +25,17 @@ export const API_PREFIX = "/wefeed-mobile-bff";
 export const TV_PREFIX = "/wefeed-tv-bff";
 const TV_HOSTS = ["https://tv.aoneroom.com"];
 
+/**
+ * Web BFF (movieboxhd.net). No request signature — the gateway only answers
+ * fully when the request carries the exact browser header set below, and it
+ * issues an anonymous Bearer token through the `x-user` response header.
+ * Playback goes through the media domain returned by /media-player/get-domain.
+ */
+export const WEB_PREFIX = "/wefeed-h5api-bff";
+const WEB_HOST = "https://h5-api.aoneroom.com";
+const WEB_REFERER =
+  "https://mzfi.me/spa/videoPlayPage/movies/x?id=0&detailSe=&detailEp=&lang=en&type=%2Fmovie%2Fdetail";
+
 const RETRY_STATUS = new Set([403, 406, 407, 408, 425, 429, 500, 502, 503, 504]);
 
 const encoder = new TextEncoder();
