@@ -30,7 +30,7 @@ export function useMomoNetwork(phone: string, country: CountryInfo | null | unde
   const iso3 = country?.iso3 ?? "";
   const dial = country?.dial ?? "";
   const localLength = country?.localLength ?? 0;
-  const { data: providers = [] } = useQuery({
+  const { data: providers = [], isFetched } = useQuery({
     queryKey: ["pawa-providers", iso3],
     queryFn: () => pawaProviders({ data: { country: iso3 } }),
     enabled: enabled && /^[A-Z]{3}$/.test(iso3),
@@ -73,7 +73,7 @@ export function useMomoNetwork(phone: string, country: CountryInfo | null | unde
 
   const settled = result && result.msisdn === msisdn ? result : null;
   // Waiting for the network list (to map the prefix) or for PawaPay's answer.
-  const checking = complete && (guess ? providers.length === 0 && !local : !settled);
+  const checking = complete && (guess ? !isFetched : !settled);
   const code = guess ? local : settled?.code ?? null;
   const name = guess && !local ? guess : code ? brandOf(code) : null;
   const logo = code ? providers.find((p) => p.provider === code)?.logo ?? "" : "";
