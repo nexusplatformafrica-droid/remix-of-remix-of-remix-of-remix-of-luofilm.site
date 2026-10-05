@@ -61,11 +61,9 @@ export function MomoPayButton({ name, logo, checking, state = "idle", disabled, 
   const busy = state === "waiting" || state === "success";
   const logoChip =
     src && !broken ? (
-      <span className="flex h-7 items-center rounded-md bg-white px-1.5 shadow-sm">
-        <img src={src} alt={name ?? ""} onError={() => setBroken(true)} className="h-5 w-auto max-w-[48px] object-contain" />
-      </span>
+      <img src={src} alt={name ?? ""} onError={() => setBroken(true)} className="h-8 w-auto max-w-[76px] object-contain" />
     ) : name ? (
-      <span className="rounded-md bg-white/90 px-1.5 py-0.5 text-[11px] font-bold text-black">{name.split(" ")[0]}</span>
+      <span className="text-[13px] font-black tracking-tight">{name.split(" ")[0]}</span>
     ) : null;
 
   return (
