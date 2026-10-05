@@ -90,13 +90,10 @@ export const Route = createFileRoute("/api/public/movie")({
             : boundedPlaybackRange(incomingRange);
         // The media host returns 403 for requests without a browser
         // User-Agent (the hosted server sends none by default).
-        // Web-player files are signed for the website's media domain referer.
         const mediaHeaders = (): Record<string, string> => ({
           "user-agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
           accept: "*/*",
-          referer: "https://mzfi.me/",
-          origin: "https://mzfi.me",
           ...(range ? { range } : {}),
         });
         // Cloudflare egress is sometimes refused by the media host even when
