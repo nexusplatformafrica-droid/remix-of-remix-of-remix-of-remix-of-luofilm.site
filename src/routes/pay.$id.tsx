@@ -1,3 +1,4 @@
+import { usePawaPredict } from "@/hooks/usePawaPredict";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
@@ -50,7 +51,7 @@ function PayPage() {
 
   const [paypalBack, setPaypalBack] = useState(false);
   const country = countryByCurrency(String(tx?.currency ?? "UGX"));
-  const detected = providerFromPhone(phone, country);
+  const detected = usePawaPredict(phone, country?.dial, providerFromPhone(phone, country));
 
   useEffect(() => {
     void getTx(id).then((row) => {

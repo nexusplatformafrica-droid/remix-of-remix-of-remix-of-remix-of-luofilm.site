@@ -44,6 +44,7 @@ import {
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
+import { usePawaPredict } from "@/hooks/usePawaPredict";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
@@ -131,7 +132,7 @@ export function SubscribeModal({
   const notice = priceNotice(localPrice, country);
   const [failOpen, setFailOpen] = useState(false);
   /** Provider guessed from the entered number, e.g. MTN MoMo. */
-  const detected = method === "mobile_money" ? providerFromPhone(phone, country) : null;
+  const detected = usePawaPredict(method === "mobile_money" ? phone : "", country?.dial, method === "mobile_money" ? providerFromPhone(phone, country) : null);
 
   useEffect(() => {
     if (!momo && method === "mobile_money") setMethod("card");
