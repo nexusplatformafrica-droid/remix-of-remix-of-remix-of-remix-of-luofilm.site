@@ -44,6 +44,7 @@ import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { useMomoNetwork } from "@/hooks/usePawaPredict";
 import { MomoPayButton, momoFailState } from "@/components/auth/MomoPayButton";
+import { pawaCountries } from "@/lib/pawapay.functions";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
