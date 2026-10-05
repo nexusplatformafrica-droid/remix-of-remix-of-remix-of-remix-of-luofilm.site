@@ -4,7 +4,7 @@ import { CheckCircle2, Loader2, RotateCcw, Wallet, XCircle } from "lucide-react"
 /* Brand colours of each network, keyed by the first word of its name. */
 const BRAND: Record<string, { bg: string; fg: string }> = {
   mtn: { bg: "#FFCC00", fg: "#1A1A1A" },
-  airtel: { bg: "#E40000", fg: "#FFFFFF" },
+  airtel: { bg: "#FFFFFF", fg: "#E40000" }, // red logo/text needs a light button to be visible
   "m": { bg: "#3FAE29", fg: "#FFFFFF" }, // M-Pesa
   mpesa: { bg: "#3FAE29", fg: "#FFFFFF" },
   vodacom: { bg: "#E60000", fg: "#FFFFFF" },
@@ -32,7 +32,8 @@ const SUCCESS = { bg: "#16A34A", fg: "#FFFFFF" };
 const FAIL = { bg: "#DC2626", fg: "#FFFFFF" };
 const LOW = { bg: "#B45309", fg: "#FFFFFF" };
 
-const keyOf = (name: string | null) => (name ?? "").split(/[\s-]/)[0]!.toLowerCase();
+// PawaPay codes look like "AIRTEL_OAPI_UGA" — split on underscores too so the brand is found.
+const keyOf = (name: string | null) => (name ?? "").split(/[\s\-_]/)[0]!.toLowerCase();
 
 export type MomoState = "idle" | "waiting" | "success" | "failed" | "insufficient";
 
@@ -61,9 +62,9 @@ export function MomoPayButton({ name, logo, checking, state = "idle", disabled, 
   const busy = state === "waiting" || state === "success";
   const logoChip =
     src && !broken ? (
-      <img src={src} alt={name ?? ""} onError={() => setBroken(true)} className="h-8 w-auto max-w-[76px] object-contain" />
+      <img src={src} alt={name ?? ""} onError={() => setBroken(true)} className="h-11 w-auto max-w-[150px] shrink-0 -ml-2 object-contain" />
     ) : name ? (
-      <span className="text-[13px] font-black tracking-tight">{name.split(" ")[0]}</span>
+      <span className="text-[15px] font-black tracking-tight">{name.split(" ")[0]}</span>
     ) : null;
 
   return (
@@ -72,7 +73,7 @@ export function MomoPayButton({ name, logo, checking, state = "idle", disabled, 
       onClick={onClick}
       disabled={disabled || checking || busy}
       style={{ backgroundColor: c.bg, color: c.fg }}
-      className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[16px] font-semibold shadow-sm transition hover:brightness-105 active:scale-[0.99] disabled:cursor-default ${checking ? "opacity-80" : ""} ${className ?? ""}`}
+      className={`flex h-12 w-full items-center justify-center gap-3 rounded-xl text-[16px] font-semibold shadow-sm transition hover:brightness-95 active:scale-[0.99] disabled:cursor-default ${checking ? "opacity-80" : ""} ${className ?? ""}`}
     >
       {state === "waiting" ? (
         <>
