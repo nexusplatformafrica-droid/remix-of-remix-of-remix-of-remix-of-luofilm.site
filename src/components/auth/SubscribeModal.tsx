@@ -44,7 +44,7 @@ import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";
 import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import { useMomoNetwork } from "@/hooks/usePawaPredict";
-import { NetworkPicker } from "@/components/auth/NetworkPicker";
+import { MomoPayButton } from "@/components/auth/MomoPayButton";
 import { detectVisitorGeo } from "@/lib/geo.functions";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { ApplePayLogo, CardLogo, GooglePayLogo, MobileMoneyLogo, PayPalLogo } from "@/components/auth/PaymentLogos";
@@ -635,13 +635,6 @@ export function SubscribeModal({
                   <p className="mt-1 text-[10.5px] opacity-60">
                     Format: {phoneFormat(country)} ({country.localLength} digits after +{country.dial})
                   </p>
-                  <NetworkPicker
-                    providers={network.providers}
-                    code={network.code}
-                    checking={network.checking}
-                    onChoose={network.choose}
-                    disabled={phase === "waiting"}
-                  />
                 </div>
               )}
 
@@ -693,7 +686,18 @@ export function SubscribeModal({
               {method === "card" && phase === "waiting" && !cardSession && (
                 <Loader2 className="mx-auto size-5 animate-spin opacity-60" />
               )}
-              {method !== "paypal" && (method !== "card" || phase === "failed") && <button
+              {method === "mobile_money" ? (
+                <MomoPayButton
+                  name={detected}
+                  logo={network.logo}
+                  checking={network.checking && phase !== "waiting"}
+                  label={phase === "waiting" ? "Waiting for payment…" : phase === "done" ? "Activated" : phase === "failed" ? "Try again" : null}
+                  disabled={phase === "waiting" || phase === "done"}
+                  onClick={() => {
+                    if (phase === "idle" || phase === "failed" || phase === "phone") void pay();
+                  }}
+                />
+              ) : method !== "paypal" && (method !== "card" || phase === "failed") && <button
                 type="button"
                 disabled={phase === "waiting" || phase === "done"}
                 onClick={() => {

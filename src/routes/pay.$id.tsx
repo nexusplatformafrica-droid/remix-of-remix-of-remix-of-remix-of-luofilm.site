@@ -1,5 +1,5 @@
 import { useMomoNetwork } from "@/hooks/usePawaPredict";
-import { NetworkPicker } from "@/components/auth/NetworkPicker";
+import { MomoPayButton } from "@/components/auth/MomoPayButton";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
@@ -218,18 +218,15 @@ function PayPage() {
                 <label className="text-[11px] font-semibold opacity-70">Mobile money number</label>
                 <input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    let d = e.target.value.replace(/[^0-9]/g, "");
+                    if (d.startsWith(country.dial) && d.length > country.localLength) d = d.slice(country.dial.length);
+                    setPhone(d.replace(/^0+/, "").slice(0, country.localLength));
+                  }}
                   inputMode="tel"
-                  placeholder="0770 123 456"
+                  placeholder="770 123 456"
                   disabled={phase === "waiting"}
                   className="mt-1 h-11 w-full rounded-2xl bg-white px-4 text-sm outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-[oklch(0.82_0.1_65)]"
-                />
-                <NetworkPicker
-                  providers={network.providers}
-                  code={network.code}
-                  checking={network.checking}
-                  onChoose={network.choose}
-                  disabled={phase === "waiting"}
                 />
               </div>
             )}
@@ -243,14 +240,15 @@ function PayPage() {
             )}
 
             {phase !== "done" && method === "mobile_money" && (
-              <button
-                type="button"
-                onClick={() => void sendMobileMoney()}
+              <MomoPayButton
+                className="mt-5"
+                name={detected}
+                logo={network.logo}
+                checking={network.checking && phase !== "waiting"}
+                label={phase === "waiting" ? "Waiting for approval…" : null}
                 disabled={phase === "waiting"}
-                className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(100deg,oklch(0.97_0.05_95),oklch(0.88_0.11_82))] text-[15px] font-bold text-[oklch(0.3_0.06_60)] shadow-[0_12px_28px_-14px_oklch(0.8_0.12_75)] transition hover:brightness-105 disabled:opacity-60"
-              >
-                {phase === "waiting" ? "Waiting for approval…" : <ProviderPayLabel name={detected} />}
-              </button>
+                onClick={() => void sendMobileMoney()}
+              />
             )}
 
             {phase !== "done" && method === "paypal" && !paypalBack && tx && (
