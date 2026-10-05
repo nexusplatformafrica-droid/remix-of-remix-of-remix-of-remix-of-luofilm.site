@@ -28,6 +28,8 @@ const homeQuery = queryOptions({
   refetchIntervalInBackground: true,
   refetchOnWindowFocus: true,
   refetchOnMount: "always",
+  retry: 3,
+  retryDelay: (attempt) => Math.min(2000 * 2 ** attempt, 15000),
 });
 
 
@@ -161,11 +163,10 @@ function HomePage() {
 
   // If a response came back empty (upstream unreachable), retry so the page
   // still fills in.
-  const degraded =
-    !!data && ((data as { degraded?: boolean }).degraded === true || autoHero.length === 0);
+  const degraded = !!data && (data.degraded === true || data.rows.length === 0);
   useEffect(() => {
     if (!degraded) return;
-    const t = setTimeout(() => void refetch(), 300);
+    const t = setTimeout(() => void refetch(), 15_000);
     return () => clearTimeout(t);
   }, [degraded, refetch]);
   // Row titles arrive with emoji from upstream; strip them for a clean typographic look.
@@ -175,7 +176,7 @@ function HomePage() {
     items.filter((i) => !isAdultItem(i));
   // Only the MovieBox website's own home sections are shown.
   const sections: { title: string; items: CatalogItem[]; ranked?: boolean }[] = (data?.rows ?? []).map((r) => ({ title: cleanTitle(r.title), items: clean(r.items) }))
-    .filter((s) => s.items.length >= 4);
+    .filter((s) => s.items.length > 0);
 
   // Real trending straight from the catalog's own trending rail.
   const rankedSection = sections.find((s) => s.ranked);
@@ -205,7 +206,7 @@ function HomePage() {
           )}
 
           {heroReady && !!slides.length && (
-            <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-12px)/1.9)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-72px)/3)] lg:px-0">
+            <section className="relative px-3 pt-[68px] [--card-w:calc((100vw-12px)/1.9)] sm:px-4 sm:[--card-w:calc((100vw-56px)/3)] lg:pt-20 lg:[--card-w:calc((100vw-80px)/3)] lg:px-2">
               {/* The hero never stops: cards in animated gradient holders pass
                   slowly across the page forever — 2 across on mobile, 3 bigger
                   ones on desktop. Hovering pauses the pass. */}
@@ -278,23 +279,23 @@ function HomePage() {
             </section>
           )}
 
-          <div className="relative z-20 mt-4 mb-3 pl-3 sm:pl-4 lg:pl-0">
+          <div className="relative z-20 mt-4 mb-3 pl-3 sm:pl-4 lg:pl-2">
             <VjRail />
           </div>
 
           {!!trending.length && (
-            <div className="relative z-10 pl-3 sm:pl-4 lg:pl-0">
+            <div className="relative z-10 pl-3 sm:pl-4 lg:pl-2">
               <Rail title="Trending now" items={trending} ranked priority />
             </div>
           )}
-          <div className="relative z-10 pl-3 sm:pl-4 lg:pl-0">
+          <div className="relative z-10 pl-3 sm:pl-4 lg:pl-2">
             <ProviderTrending />
           </div>
 
         </div>
 
-        <main className="pb-28 pl-3 sm:pl-4 lg:pb-16 lg:pl-0">
-          {!data && (
+        <main className="pb-28 pl-3 sm:pl-4 lg:pb-16 lg:pl-2">
+          {!data && !data && (
             <>
               <RowSkeleton />
               <RowSkeleton />
