@@ -12,15 +12,15 @@
 <!-- LOVABLE:END -->
 
 - Catalog playback and downloads must use only direct full-file resources from the TV BFF through `/api/public/movie`; never restore mobile resource, DASH, or stream-rebuild fallbacks because they served promos or incomplete files.
-- Catalog downloads stream the authenticated `/api/public/movie` response through the same-origin download service worker; why: the browser manager needs real size/progress while protected preview hosts reject a separate unauthenticated attachment navigation.
 - All catalog TV-BFF calls (home rails included) must run through server functions (`src/lib/catalog.functions.ts`); the TV gateway blocks browser origins with CORS, so client components must never import `fetchSection`/`searchCatalog` or other `moviebox.ts` functions directly.
 - Activity records capture only signed-in users' actionable clicks, internal destinations, and page paths; never store typed field values or other sensitive input.
 - Keep every existing sitemap in the sitemap index and robots file when adding a new content-group sitemap, because external indexes may already rely on those URLs.
 - Extra providers (4KHDHub, Dramachi, Addons/Cinemeta, CircleFTP, DhakaFlix) live in `src/lib/providers/*.server.ts` behind `src/lib/providers.functions.ts`; source links resolve lazily via tokens and play/download through `/api/public/stream`. Why: provider sites block browsers and their mirror links expire quickly.
 - Packages that break the server runtime (e.g. `qrcode`/pngjs) must be dynamically imported inside browser-only handlers; why: one static import crashed every hosted page with "This page didn't load".
-- Download/probe fetches and the download service worker use `credentials: "same-origin"`, never `"include"`; why: media CDNs answer `Access-Control-Allow-Origin: *`, which browsers reject for credentialed cross-origin redirects.
 - Provider `resolveSource` probes every mirror and returns only ones that answer with real media bytes (unwrapping `?link=` landing pages); why: hosts list dead mirrors first, which produced "file wasn't available" downloads.
 - PayPal orders and captures run server-side behind `paypal.functions.ts`, while the v6 Web SDK renders PayPal's real button and modal approval UI; the public client ID lives in code and `PAYPAL_CLIENT_SECRET` stays server-only.
 - Card payments use Whop's express "whop-pay" button (floating Whop window) with a floating embedded checkout as fallback, never a new tab or inline full checkout; why: user wants a one-click button that opens Whop's overlay on the page.
 - Mobile money (deposits, payouts, wallet balances) runs through PawaPay v2 in `src/lib/pawapay.server.ts` behind `pawapay.functions.ts`; token in `PAWAPAY_API_TOKEN`, `PAWAPAY_ENV=sandbox` switches hosts. Why: API token must never reach the browser.
 - Mobile money network detection uses the national prefix table in `countries.ts` first and PawaPay predict-provider only for unknown prefixes; why: PawaPay mislabels many MTN Uganda numbers (077x, 0795x) as Airtel.
+- Catalog and subtitle downloads open the same-origin attachment URL directly so the browser's own download manager handles them; no in-app download panel. Why: user wants downloads to behave like the MovieBox website.
+- Home rows come only from the MovieBox web home (retried); no search-built or TV-app fallback rows. Why: fallbacks showed outdated sections on other hosts.
