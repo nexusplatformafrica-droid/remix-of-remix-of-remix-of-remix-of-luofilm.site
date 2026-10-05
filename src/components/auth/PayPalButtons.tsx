@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { startPayPal, syncPayPalPayment } from "@/lib/payments";
 import type { Row } from "@/lib/fdb";
+import { PaymentButtonSkeleton } from "@/components/auth/PaymentLogos";
 
 const CLIENT_ID =
   "BAA1V2BeV9eEaiwruLcISfdK1zxmx4PMVhKGFzdThPHBHHtMWH6DXBcnxaIpHu1smiJ_Xz39y27jT5-bwg";
@@ -121,8 +121,8 @@ export function PayPalButtons({
   return (
     <div className="relative">
       {(loading || starting) && (
-        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <Loader2 className="size-5 animate-spin opacity-60" />
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <PaymentButtonSkeleton />
         </div>
       )}
       <div ref={box} className="min-h-11" />
