@@ -11,7 +11,16 @@ import {
 } from "@/lib/download";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
-import { queueMovieDownload, queueSubtitleDownload } from "@/lib/download-queue";
+
+/** Hand a same-origin attachment URL to the browser's own download manager. */
+function browserDownload(href: string) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 
 const LANGUAGE_FIXES: Record<string, string> = { in_id: "id", fil: "fil", zh_cn: "zh-Hans", zh_tw: "zh-Hant" };
 
@@ -74,20 +83,10 @@ export function DownloadDialog({
       onClose();
       return;
     }
-    queueMovieDownload({
-      id: `${catalogId}:${season}:${episode}:${source.id}`,
-      url: catalogMediaUrl(catalogId, season, episode, source.id, source.resolution),
-      probeUrl: catalogMediaProbeUrl(catalogId, season, episode, source.id, source.resolution),
-      filename: `${filename}.mp4`,
-      subjectId: catalogId,
-      subjectName: baseName,
-      season,
-      episode,
-      resourceId: source.id,
-      resolution: source.resolution,
-      captions: source.captions.map((c) => ({ label: c.label, url: subtitleUrl(c.url) })),
-    });
-    toast.success("Download started — see progress in the downloads panel");
+    browserDownload(
+      catalogMediaUrl(catalogId, season, episode, source.id, source.resolution, filename),
+    );
+    toast.success("Download started in your browser");
     onClose();
   };
 
@@ -241,9 +240,8 @@ export function DownloadDialog({
                   onClick={(e) => {
                     e.preventDefault();
                     if (!subscribed) return guard(e);
-                    queueSubtitleDownload(
-                      subtitleUrl(caption.url),
-                      `${baseName}.${languageName(caption.label)}.vtt`,
+                    browserDownload(
+                      `${subtitleUrl(caption.url)}&dl=${encodeURIComponent(`${baseName}.${languageName(caption.label)}.vtt`)}`,
                     );
                   }}
                   className={`${tile} text-sm font-semibold text-foreground`}
