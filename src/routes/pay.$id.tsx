@@ -6,7 +6,6 @@ import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-rea
 import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
 import { countryByCurrency } from "@/lib/countries";
-import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import type { Row } from "@/lib/fdb";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
 import { lazy, Suspense } from "react";

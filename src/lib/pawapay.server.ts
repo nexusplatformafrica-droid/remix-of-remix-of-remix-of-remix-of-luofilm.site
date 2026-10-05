@@ -56,7 +56,7 @@ async function resolveProvider(phone: string, provider?: string | undefined) {
   return predictProvider(phone);
 }
 
-export async function activeProviders(country: string) {
+export async function activeProviders(country: string): Promise<{ provider: string; displayName: string; logo: string }[]> {
   const r = await call(`/v2/active-conf?country=${encodeURIComponent(country)}&operationType=DEPOSIT`);
   const c = (r?.countries ?? []).find((x: any) => x?.country === country);
   return (c?.providers ?? []).map((p: any) => ({ provider: String(p.provider), displayName: String(p.displayName ?? p.provider), logo: p.logo ? String(p.logo) : "" }));
