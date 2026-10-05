@@ -98,6 +98,20 @@ export async function payout(input: { phone: string; amount: number; currency: s
   return { internal_reference: payoutId, provider: p.provider };
 }
 
+/** Turns PawaPay failure codes into plain words the customer understands. */
+function failText(f: any): string {
+  const code = String(f?.failureCode ?? "").toUpperCase();
+  const map: Record<string, string> = {
+    INSUFFICIENT_BALANCE: "Not enough money on your mobile money account.",
+    PAYER_LIMIT_REACHED: "Your mobile money limit was reached.",
+    PAYMENT_NOT_APPROVED: "The payment was not approved on your phone.",
+    PAYER_NOT_FOUND: "This number isn't registered for mobile money on that network.",
+    UNSPECIFIED_FAILURE: "The network declined the payment.",
+    WALLET_LIMIT_REACHED: "Your mobile money limit was reached.",
+  };
+  return map[code] ?? String(f?.failureMessage ?? "Payment failed");
+}
+
 export async function status(kind: "deposits" | "payouts", id: string) {
   const r = await call(`/v2/${kind}/${encodeURIComponent(id)}`);
   if (r?.status === "NOT_FOUND") return { status: "pending", message: "Waiting for confirmation", authorizationUrl: null };
@@ -105,7 +119,7 @@ export async function status(kind: "deposits" | "payouts", id: string) {
   const s = String(d.status ?? "").toUpperCase();
   if (s === "COMPLETED") return { status: "success", message: "Payment received", authorizationUrl: null };
   if (s === "FAILED")
-    return { status: "failed", message: String(d.failureReason?.failureMessage ?? "Payment failed"), authorizationUrl: null };
+    return { status: "failed", message: failText(d.failureReason), authorizationUrl: null };
   return { status: "pending", message: "Approve the prompt on your phone", authorizationUrl: d.authorizationUrl ?? null };
 }
 

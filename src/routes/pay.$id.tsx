@@ -1,5 +1,5 @@
 import { useMomoNetwork } from "@/hooks/usePawaPredict";
-import { MomoPayButton } from "@/components/auth/MomoPayButton";
+import { MomoPayButton, momoFailState } from "@/components/auth/MomoPayButton";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
@@ -238,15 +238,17 @@ function PayPage() {
               </p>
             )}
 
-            {phase !== "done" && method === "mobile_money" && (
+            {method === "mobile_money" && (
               <MomoPayButton
                 className="mt-5"
                 name={detected}
                 logo={network.logo}
                 checking={network.checking && phase !== "waiting"}
-                label={phase === "waiting" ? "Waiting for approval…" : null}
-                disabled={phase === "waiting"}
-                onClick={() => void sendMobileMoney()}
+                state={phase === "waiting" ? "waiting" : phase === "done" ? "success" : phase === "failed" ? momoFailState(status) : "idle"}
+                onClick={() => {
+                  if (phase === "failed") started.current = false;
+                  void sendMobileMoney();
+                }}
               />
             )}
 
