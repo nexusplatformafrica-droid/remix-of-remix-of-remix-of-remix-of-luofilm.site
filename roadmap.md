@@ -18,3 +18,5 @@
 - [x] Fix provider downloads saving "file not available" (dead mirrors) and Moviebox/subtitle downloads on the hosted site.
 - [x] Add live PayPal checkout (membership modal + pay page); fix Whop embedded form receiving a URL instead of a session id.
 - [x] Whop live payments: WHOP_API_KEY, WHOP_COMPANY_ID and SITE_URL saved in this project.
+- [ ] Replace the admin upload signer with a Cloudflare R2 binding and verify a deployed upload (waiting for the user to attach `MOVIE_MAX_MEDIA`).
+- [x] Show an icon-only desktop sidebar and put the website name in the floating navigation.

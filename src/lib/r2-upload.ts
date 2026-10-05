@@ -33,12 +33,15 @@ export async function uploadToR2(folder: string, file: File, onProgress?: (p: Up
     const params = new URLSearchParams({ action: "single", filename: file.name });
     const user = getFbAuth().currentUser;
     if (!user) throw new Error("You must be signed in to upload.");
-    const response = await retry(() => fetch(`/api/public/admin-upload?${params}`, {
-      method: "POST", body: file,
-      headers: { Authorization: `Bearer ${awaitToken(user)}`, "Content-Type": file.type || "application/octet-stream" },
-    }));
-    const payload = await response.json() as { error?: string; url?: string };
-    if (!response.ok || !payload.url) throw new Error(payload.error || `Upload failed (${response.status})`);
+    const payload = await retry(async () => {
+      const response = await fetch(`/api/public/admin-upload?${params}`, {
+        method: "POST", body: file,
+        headers: { Authorization: `Bearer ${await user.getIdToken()}`, "Content-Type": file.type || "application/octet-stream" },
+      });
+      const data = await response.json() as { error?: string; url?: string };
+      if (!response.ok || !data.url) throw new Error(data.error || `Upload failed (${response.status})`);
+      return data;
+    });
     report(file.size);
     return payload.url;
   }
