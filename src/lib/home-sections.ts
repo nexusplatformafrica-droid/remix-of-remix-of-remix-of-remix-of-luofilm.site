@@ -71,7 +71,9 @@ export const HOME_SECTIONS: HomeSection[] = [
     // Live searches for BET+ style shows — no fixed name list, so the row
     // refreshes with the catalog and never grabs a different movie that
     // happens to share a title.
-    keywords: ["bet plus", "tyler perry series", "bet original", "black drama series 2026"],
+    keywords: ["tyler perry series", "black drama series", "african american drama", "urban crime series"],
+    genre: /drama|crime|romance|comedy|thriller/i,
+    avoidGenre: /anime|animation|reality/i,
     type: "series",
   },
   {
