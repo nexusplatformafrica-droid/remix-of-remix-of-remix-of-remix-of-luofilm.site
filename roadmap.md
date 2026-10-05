@@ -17,4 +17,4 @@
 - [x] Fix hosted-site crash ("This page didn't load") caused by the QR code library.
 - [x] Fix provider downloads saving "file not available" (dead mirrors) and Moviebox/subtitle downloads on the hosted site.
 - [x] Add live PayPal checkout (membership modal + pay page); fix Whop embedded form receiving a URL instead of a session id.
-- [ ] Whop live payments: blocked until WHOP_API_KEY and WHOP_COMPANY_ID are added (user action).
+- [x] Whop live payments: WHOP_API_KEY, WHOP_COMPANY_ID and SITE_URL saved in this project.
