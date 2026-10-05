@@ -39,7 +39,6 @@ import {
   isValidFor,
   phoneFormat,
   priceNotice,
-  providerFromPhone,
 } from "@/lib/countries";
 import type { Row } from "@/lib/fdb";
 import { PaymentFailedModal } from "@/components/auth/PaymentFailedModal";

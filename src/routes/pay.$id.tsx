@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Loader2, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 import { getTx, startMobileMoney, syncTransaction, startCardSession, syncCardPayment, syncPayPalPayment } from "@/lib/payments";
 import { formatMoney, isValidMsisdn } from "@/lib/relworx";
-import { countryByCurrency, providerFromPhone } from "@/lib/countries";
+import { countryByCurrency } from "@/lib/countries";
 import { ProviderPayLabel } from "@/components/auth/PaymentLogos";
 import type { Row } from "@/lib/fdb";
 import { PayPalButtons } from "@/components/auth/PayPalButtons";
@@ -223,6 +223,13 @@ function PayPage() {
                   placeholder="0770 123 456"
                   disabled={phase === "waiting"}
                   className="mt-1 h-11 w-full rounded-2xl bg-white px-4 text-sm outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-[oklch(0.82_0.1_65)]"
+                />
+                <NetworkPicker
+                  providers={network.providers}
+                  code={network.code}
+                  checking={network.checking}
+                  onChoose={network.choose}
+                  disabled={phase === "waiting"}
                 />
               </div>
             )}
