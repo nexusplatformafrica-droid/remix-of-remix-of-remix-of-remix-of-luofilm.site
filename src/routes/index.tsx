@@ -295,7 +295,7 @@ function HomePage() {
         </div>
 
         <main className="pb-28 pl-3 sm:pl-4 lg:pb-16 lg:pl-2">
-          {!data && !data && (
+          {!data && (
             <>
               <RowSkeleton />
               <RowSkeleton />

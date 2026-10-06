@@ -129,7 +129,7 @@ function SearchPage() {
           <TopBar />
         </div>
 
-        <main className="px-3 pb-28 sm:px-4 lg:px-8 lg:pb-16">
+        <main className="px-3 pb-28 sm:px-4 lg:px-2 lg:pb-16">
           <form
             onSubmit={submit}
             className="mt-4 flex h-14 items-center gap-3 rounded-2xl bg-foreground/10 px-4 ring-1 ring-border backdrop-blur-md lg:hidden"

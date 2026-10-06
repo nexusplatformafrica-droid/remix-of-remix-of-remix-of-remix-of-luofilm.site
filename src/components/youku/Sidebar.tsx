@@ -24,8 +24,8 @@ export function Sidebar() {
     }`;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sidebar-w)] flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-      <nav aria-label="Categories" className="scrollbar-none flex-1 overflow-y-auto pt-16 pb-4">
+    <aside className="fixed bottom-4 left-0 top-16 z-30 hidden w-[var(--sidebar-w)] flex-col overflow-hidden rounded-r-2xl border border-l-0 border-sidebar-border bg-sidebar shadow-xl lg:flex">
+      <nav aria-label="Categories" className="scrollbar-none flex-1 overflow-y-auto py-2">
         {items.map(({ slug, label, icon }) => {
           const active = slug === "home" ? pathname === "/" : pathname === `/category/${slug}`;
           const inner = (
