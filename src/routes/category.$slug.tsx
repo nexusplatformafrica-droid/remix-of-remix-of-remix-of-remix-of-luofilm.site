@@ -127,7 +127,7 @@ function CategoryPage() {
           <TopBar />
         </div>
 
-        <main className="px-3 pb-28 sm:px-4 lg:px-0 lg:pb-16">
+        <main className="px-3 pb-28 sm:px-4 lg:px-2 lg:pb-16">
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground">
             {category.label}
           </h1>

@@ -439,7 +439,9 @@ async function fetchWebHome() {
       comingSoon = [...comingSoon, ...items];
       continue;
     }
-    if (block?.type !== "SUBJECTS_MOVIE" || items.length < 4) continue;
+    // The web home rotates between several subject-bearing block types.
+    // Trust the presence of real subjects instead of one brittle type name.
+    if (!items.length || block?.type === "FILTER" || block?.type === "SPORT_LIVE") continue;
     const title = railTitle(String(block?.title || ""));
     const existing = rows.find((r) => r.title.toLowerCase() === title.toLowerCase());
     if (existing) {
@@ -447,7 +449,7 @@ async function fetchWebHome() {
       existing.items.push(...items.filter((i) => !ids.has(i.id)));
     } else rows.push({ title, items });
   }
-  if (rows.length < 3) throw new Error("web home empty");
+  if (!rows.length) throw new Error("web home empty");
   const trending = rows.find((r) => /popular/i.test(r.title))?.items ?? rows[0]!.items;
   return { hero: hero.slice(0, 8), rows, trending: trending.slice(0, 20), comingSoon: comingSoon.slice(0, 30), web: true };
 }
@@ -662,10 +664,8 @@ async function webSearchSubjects(keyword: string, page = 1): Promise<any[] | nul
 }
 
 export async function searchCatalog(keyword: string, page = 1) {
-  const subjects =
-    (await webSearchSubjects(keyword, page)) ??
-    (await tvSearchSubjects(keyword, page)) ??
-    (await mobileSearchSubjects(keyword, page));
+  const subjects = await webSearchSubjects(keyword, page);
+  if (!subjects) throw new Error("web search unavailable");
   const out: CatalogItem[] = [];
   const seen = new Set<string>();
   for (const subject of subjects) {

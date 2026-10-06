@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Keep MovieBox web home rows visible through intermittent upstream failures; make sidebar inset and rounded without clipping page content.
+- [x] Keep MovieBox web home rows visible through intermittent upstream failures; make sidebar inset and rounded without clipping page content.
 - [x] Restore the original site font except on MOVIEMAX, improve sidebar icon contrast with the five chosen icons, and align the content grid to the sidebar.
 - [x] Remove every legacy DASH and mobile-source playback fallback.
 - [x] Make direct TV full-file downloads the only catalog download path.

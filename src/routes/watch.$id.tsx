@@ -233,7 +233,7 @@ function WatchPage() {
           <TopBar />
         </div>
 
-        <main className="px-3 pb-28 sm:px-4 lg:px-8 lg:pb-16">
+        <main className="px-3 pb-28 sm:px-4 lg:px-2 lg:pb-16">
           <Link
             to="/"
             className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
